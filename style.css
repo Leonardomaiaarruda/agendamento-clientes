@@ -1,21 +1,27 @@
-/* Configurações Globais */
+/* =========================================
+   CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
+   ========================================= */
 :root {
-    --primary: #d4af37; /* Dourado Barbearia/Estética */
+    --primary: #d4af37;        /* Dourado Premium */
+    --primary-hover: #f1c40f;
     --secondary: #1e1e1e;
-    --bg: #121212;
-    --card-bg: #1e1e1e;
+    --bg: #121212;             /* Fundo Deep Black */
+    --card-bg: #1c1c1c;
+    --input-bg: #2a2a2a;
     --text: #ffffff;
     --text-muted: #a0a0a0;
     --success: #28a745;
-    --error: #dc3545;
-    --shadow: 0 4px 15px rgba(0,0,0,0.5);
+    --danger: #dc3545;
+    --info: #3498db;
+    --shadow: 0 8px 25px rgba(0,0,0,0.7);
+    --transition: all 0.3s ease;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
@@ -32,238 +38,305 @@ body {
     max-width: 500px;
 }
 
-/* Cabeçalho */
+/* =========================================
+   CABEÇALHO
+   ========================================= */
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
 }
 
 header h1 {
-    font-size: 1.8rem;
+    font-size: 2rem;
     color: var(--primary);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 header p {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-style: italic;
 }
 
-/* Estilização dos Cards/Seções */
-.section-card {
+/* =========================================
+   CARDS E SEÇÕES
+   ========================================= */
+.section-card, .container-consulta {
     background: var(--card-bg);
-    padding: 20px;
-    border-radius: 12px;
+    padding: 25px;
+    border-radius: 15px;
     box-shadow: var(--shadow);
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     border: 1px solid #333;
+    transition: var(--transition);
 }
 
-.section-title {
-    font-size: 1rem;
+.section-card:hover {
+    border-color: #444;
+}
+
+.section-title, .container-consulta h3 {
+    font-size: 1.1rem;
     font-weight: bold;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     color: var(--primary);
 }
 
-/* Inputs e Selects */
+.section-title span {
+    background: var(--primary);
+    color: black;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+/* =========================================
+   FORMULÁRIOS E INPUTS
+   ========================================= */
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 18px;
+    position: relative;
 }
 
 label {
     display: block;
     font-size: 0.85rem;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: var(--text-muted);
+    font-weight: 500;
 }
 
 select, input {
     width: 100%;
-    padding: 12px;
-    background: #2d2d2d;
+    padding: 14px;
+    background: var(--input-bg);
     border: 1px solid #444;
-    border-radius: 8px;
+    border-radius: 10px;
     color: white;
     font-size: 1rem;
     outline: none;
-    transition: border 0.3s;
+    transition: var(--transition);
 }
 
 select:focus, input:focus {
     border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
 }
 
-/* Grade de Horários */
+/* Estilo para campos "Seguros" (Cadeado simbólico) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* =========================================
+   GRADE DE HORÁRIOS
+   ========================================= */
 #listaHorarios {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
+    margin-top: 10px;
 }
 
 .btn-hora {
-    background: transparent;
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: bold;
+    background: #252525;
+    border: 1px solid #444;
+    color: var(--text);
+    padding: 12px 5px;
+    border-radius: 10px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
-.btn-hora:hover {
+.btn-hora:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.btn-hora.selecionado {
+    background-color: var(--primary) !important;
+    color: #000 !important;
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.btn-hora:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* =========================================
+   ÁREA DE CONSULTA E HISTÓRICO
+   ========================================= */
+.input-grupo-seguro {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-buscar {
     background: var(--primary);
     color: black;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: var(--transition);
 }
 
-.btn-hora.selected {
-    background: var(--primary);
+.btn-buscar:hover {
+    background: var(--primary-hover);
+    transform: scale(1.02);
+}
+
+.tabela-responsiva {
+    overflow-x: auto;
+    margin-top: 20px;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.tabela-historico {
+    width: 100%;
+    border-collapse: collapse;
+    background: #1a1a1a;
+}
+
+.tabela-historico th {
+    background: #252525;
+    color: var(--primary);
+    padding: 15px 10px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.tabela-historico td {
+    padding: 15px 10px;
+    border-bottom: 1px solid #333;
+    font-size: 0.9rem;
+}
+
+/* STATUS BADGES */
+.badge-status {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.status-verde { background: rgba(40, 167, 69, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+.status-azul { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; }
+
+.card-resumo {
+    background: linear-gradient(135deg, var(--primary), #b8860b);
     color: black;
-    box-shadow: 0 0 10px var(--primary);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    text-align: center;
+    font-weight: bold;
 }
 
-/* Modal de Confirmação */
+/* =========================================
+   MODAL DE FINALIZAÇÃO
+   ========================================= */
 .modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; padding: 20px;
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
     background: var(--card-bg);
     width: 100%;
-    max-width: 400px;
-    padding: 25px;
-    border-radius: 15px;
+    max-width: 420px;
+    padding: 30px;
+    border-radius: 20px;
     border: 1px solid var(--primary);
-    text-align: center;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
 }
 
-.modal-content h3 {
-    margin-bottom: 10px;
-    color: var(--primary);
-}
-
-#resumo {
-    background: rgba(255,255,255,0.05);
-    padding: 10px;
-    border-radius: 8px;
+.resumo-agendamento {
+    background: #252525;
+    padding: 15px;
+    border-radius: 10px;
     margin-bottom: 20px;
+    border-left: 4px solid var(--primary);
+    text-align: left;
     font-size: 0.9rem;
 }
 
-/* Botões de Ação */
 .btn-confirmar {
     background: var(--primary);
     color: black;
     border: none;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 16px;
+    border-radius: 12px;
     width: 100%;
-    font-weight: bold;
+    font-weight: 800;
     font-size: 1rem;
     cursor: pointer;
-    margin-bottom: 10px;
+    margin-top: 10px;
+    transition: var(--transition);
+}
+
+.btn-confirmar:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
 
 .btn-cancelar {
     background: transparent;
     color: var(--text-muted);
     border: none;
+    margin-top: 15px;
     cursor: pointer;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.btn-cancelar:hover {
+    color: white;
     text-decoration: underline;
 }
 
-.hidden {
-    display: none;
+/* =========================================
+   UTILITÁRIOS E RESPONSIVIDADE
+   ========================================= */
+.hidden { display: none; }
+
+.loading-skeleton {
+    animation: pulse-gray 1.8s infinite ease-in-out;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 400% 400%;
 }
 
-/* Mensagens de erro ou vazio */
-.erro {
-    grid-column: span 3;
-    text-align: center;
-    color: var(--text-muted);
-    font-style: italic;
-    padding: 20px;
+@keyframes pulse-gray {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-.container-consulta {
-    padding: 20px;
-    background: #1e1e1e;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-bottom: 15px;
-}
-
-.input-grupo { display: flex; gap: 10px; margin-bottom: 20px; }
-.input-grupo input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-
-.tabela-historico { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.tabela-historico th, .tabela-historico td { padding: 12px 8px; border-bottom: 1px solid #eee; text-align: left; }
-
-.badge-status { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-.status-verde { background: #d4edda; color: #155724; }
-.status-azul { background: #cce5ff; color: #004085; }
-
-.card-resumo { background: #d4af37; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffb300; }
-.btn-buscar{
-    padding: 5px;
-}
-
-
-.btn-buscar {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.btn-cancelar-cliente {
-    background: none;
-    color: #d32f2f;
-    border: 1px solid #d32f2f;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    transition: 0.3s;
-}
-
-.btn-cancelar-cliente:hover {
-    background-color: #d32f2f;
-    color: white;
-}
-
-.badge-verde { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-.badge-azul { background: #cce5ff; color: #004085; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-
-.tabela-responsiva { overflow-x: auto; margin-top: 15px; }
-.tabela-historico { width: 100%; border-collapse: collapse; }
-.tabela-historico th, .tabela-historico td { 
-    padding: 12px 10px; 
-    text-align: left; 
-    border-bottom: 1px solid #eee; 
-    font-size: 13px;
-}
-
-/* Responsividade */
-@media (max-width: 380px) {
-    #listaHorarios {
-        grid-template-columns: repeat(2, 1fr);
-    }
+@media (max-width: 400px) {
+    #listaHorarios { grid-template-columns: repeat(2, 1fr); }
+    header h1 { font-size: 1.5rem; }
 }

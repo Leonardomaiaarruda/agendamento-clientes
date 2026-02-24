@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento | Sua Barbearia</title>
+    <title>Agendamento | Barbearia Premium</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,31 +13,41 @@
             <p>Escolha o melhor horário para você</p>
         </header>
 
-    <div class="container-consulta">
-        <h3>🔍 Consultar Meus Agendamentos</h3>
-        <p>Digite o seu WhatsApp para ver o seu histórico ou cancelar horários.</p>
-        <div class="input-grupo">
-            <input type="tel" id="whatsConsulta" placeholder="Ex: 11999999999">
-            <button onclick="consultarHistoricoCliente()" class="btn-buscar">Ver Histórico</button>
-        </div>
+        <div class="container-consulta">
+            <h3>🔍 Meus Agendamentos</h3>
+            <p>Para sua segurança, informe seu WhatsApp e Data de Nascimento para consultar ou cancelar.</p>
+            
+            <div class="input-grupo-seguro">
+                <div class="form-group">
+                    <label for="whatsConsulta">Seu WhatsApp</label>
+                    <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric">
+                </div>
+                
+                <div class="form-group">
+                    <label for="nascConsulta">Data de Nascimento</label>
+                    <input type="date" id="nascConsulta">
+                </div>
+                
+                <button onclick="consultarHistoricoCliente()" class="btn-buscar">Verificar e Acessar</button>
+            </div>
 
-        <div id="resultadoConsulta" class="hidden">
-            <div id="resumoCliente"></div>
-            <div class="tabela-responsiva">
-                <table class="tabela-historico">
-                    <thead>
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>Serviço</th>
-                            <th>Status</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoHistorico"></tbody>
-                </table>
+            <div id="resultadoConsulta" class="hidden">
+                <div id="resumoCliente"></div>
+                <div class="tabela-responsiva">
+                    <table class="tabela-historico">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Serviço</th>
+                                <th>Status</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoHistorico"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
 
         <section class="section-card">
             <div class="section-title"><span>1.</span> O que vamos fazer?</div>
@@ -58,24 +68,31 @@
         <section class="section-card">
             <div class="section-title"><span>3.</span> Horários Disponíveis</div>
             <div id="listaHorarios" class="lista-horarios">
-                <p class="erro">Selecione uma data para ver as vagas.</p>
+                <p class="instrucao">Selecione uma data para ver as vagas.</p>
             </div>
         </section>
 
         <div id="modalConfirmacao" class="modal hidden">
             <div class="modal-content">
                 <h3>Finalizar Agendamento</h3>
-                <div id="resumo">
-                    </div>
+                <div id="resumo" class="resumo-agendamento"></div>
                 
                 <div class="form-group">
-                    <label>Seu Nome</label>
+                    <label for="nomeCliente">Seu Nome</label>
                     <input type="text" id="nomeCliente" placeholder="Nome Completo">
                 </div>
                 
                 <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="tel" id="telCliente" placeholder="(00) 00000-0000">
+                    <label for="telCliente">WhatsApp</label>
+                    <input type="tel" id="telCliente" placeholder="(00) 00000-0000" inputmode="numeric">
+                </div>
+
+                <div class="form-group">
+                    <label for="nascCliente">Data de Nascimento (Segurança)</label>
+                    <input type="date" id="nascCliente">
+                    <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 4px;">
+                        *Use esta data para consultar ou cancelar seus horários depois.
+                    </small>
                 </div>
 
                 <button onclick="confirmarAgendamento()" id="btnFinalizar" class="btn-confirmar">
@@ -89,9 +106,9 @@
 
     <script src="script.js"></script>
     <script>
-        // Função simples para fechar o modal
         function fecharModal() {
-            document.getElementById('modalConfirmacao').classList.add('hidden');
+            const modal = document.getElementById('modalConfirmacao');
+            if (modal) modal.classList.add('hidden');
         }
     </script>
 </body>

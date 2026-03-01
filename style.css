@@ -485,12 +485,41 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Responsividade para o botão no mobile */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+    /* Faz o container do topo empilhar os itens */
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Move o botão de Meus Agendamentos para baixo do título */
     .btn-abrir-consulta {
-        top: 10px;
-        right: 10px;
-        font-size: 0.8rem;
-        padding: 8px 12px;
+        position: relative; /* Remove o posicionamento fixo/absoluto */
+        top: 0;
+        right: 0;
+        margin: 10px auto 20px auto; /* Centraliza e dá espaço */
+        order: 2; /* Garante que ele fique após o header se necessário */
+        width: 90%;
+    }
+
+    header {
+        order: 1;
+    }
+
+    /* Estilo para a tabela virar card (conforme solicitado) */
+    .tabela-historico td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        text-align: right;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tabela-historico td::before {
+        content: attr(data-label); /* Aqui a mágica do JS acontece */
+        font-weight: bold;
+        text-align: left;
     }
 }
 

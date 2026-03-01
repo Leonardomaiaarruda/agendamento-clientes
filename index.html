@@ -5,55 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendamento | Barbearia Premium</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Garantia extra de que a classe hidden vai funcionar */
+        .hidden { display: none !important; }
+        
+        /* Estilo para destacar o preço na seleção */
+        .preco-tag {
+            color: #27ae60;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
+
+    <button class="btn-abrir-consulta" onclick="abrirModalConsulta()">
+        🔍 Meus Agendamentos
+    </button>
+
     <div class="container">
         <header>
             <h1>✂️ Barbearia Premium</h1>
             <p>Escolha o melhor horário para você</p>
         </header>
 
-        <div class="container-consulta">
-            <h3>🔍 Meus Agendamentos</h3>
-            <p>Para sua segurança, informe seu WhatsApp e Data de Nascimento para consultar ou cancelar.</p>
-            
-            <div class="input-grupo-seguro">
-                <div class="form-group">
-                    <label for="whatsConsulta">Seu WhatsApp</label>
-                    <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric">
-                </div>
-                
-                <div class="form-group">
-                    <label for="nascConsulta">Data de Nascimento</label>
-                    <input type="date" id="nascConsulta">
-                </div>
-                
-                <button onclick="consultarHistoricoCliente()" class="btn-buscar">Verificar e Acessar</button>
-            </div>
-
-            <div id="resultadoConsulta" class="hidden">
-                <div id="resumoCliente"></div>
-                <div class="tabela-responsiva">
-                    <table class="tabela-historico">
-                        <thead>
-                            <tr>
-                                <th>Data/Hora</th>
-                                <th>Serviço</th>
-                                <th>Status</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpoHistorico"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         <section class="section-card">
-            <div class="section-title"><span>1.</span> O que vamos fazer?</div>
+            <div class="section-title"><span>1.</span> Selecione o Serviço</div> 
             <div class="form-group">
                 <select id="servicoCliente" onchange="buscarDisponibilidade()">
-                    <option value="" disabled selected>Carregando serviços...</option>
+                    <option value="" disabled selected>Carregando serviços e preços...</option>
                 </select>
             </div>
         </section>
@@ -75,7 +55,8 @@
         <div id="modalConfirmacao" class="modal hidden">
             <div class="modal-content">
                 <h3>Finalizar Agendamento</h3>
-                <div id="resumo" class="resumo-agendamento"></div>
+                <div id="resumo" class="resumo-agendamento">
+                    </div>
                 
                 <div class="form-group">
                     <label for="nomeCliente">Seu Nome</label>
@@ -99,17 +80,75 @@
                     Confirmar Agendamento
                 </button>
                 <button onclick="fecharModal()" class="btn-cancelar">Voltar</button>
+            </div>
+        </div>
 
+        <div id="modalConsulta" class="modal-full hidden">
+            <div class="modal-full-content">
+                <span class="btn-fechar-modal" onclick="fecharModalConsulta()">&times;</span>
+                
+                <h3>🔍 Meus Agendamentos</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Informe seus dados para consultar ou cancelar horários.
+                </p>
+                
+                <div class="input-grupo-seguro">
+                    <div class="form-group">
+                        <label>Seu WhatsApp</label>
+                        <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Data de Nascimento</label>
+                        <input type="date" id="nascConsulta">
+                    </div>
+                    
+                    <button onclick="consultarHistoricoCliente()" class="btn-buscar">Verificar e Acessar</button>
+                </div>
+
+                <div id="resultadoConsulta" class="hidden">
+                    <div id="resumoCliente" style="margin-top: 20px; font-weight: bold; color: var(--primary);"></div>
+                    <div class="tabela-responsiva">
+                        <table class="tabela-historico">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Serviço</th>
+                                    <th>Valor</th> <th>Status</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoHistorico"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmacaoCustom" class="modal-custom hidden">
+        <div class="modal-custom-content">
+            <div class="modal-custom-icon">⚠️</div>
+            <h3>Confirmar Cancelamento</h3>
+            <p>Você realmente deseja desmarcar este horário? Esta ação não pode ser desfeita.</p>
+            <div class="modal-custom-buttons">
+                <button id="btnConfirmarCancela" class="btn-confirmar-msg">Sim, Cancelar</button>
+                <button onclick="fecharModalCustom()" class="btn-voltar-msg">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalSucesso" class="modal-custom hidden">
+        <div class="modal-custom-content">
+            <div class="modal-custom-icon" style="color: #27ae60;">✅</div>
+            <h3 id="tituloSucesso">Concluído!</h3>
+            <p id="mensagemSucesso">A operação foi realizada com sucesso.</p>
+            <div class="modal-custom-buttons">
+                <button onclick="fecharModalSucesso()" class="btn-voltar-msg" style="background: #27ae60; color: white;">Ok</button>
             </div>
         </div>
     </div>
 
     <script src="script.js"></script>
-    <script>
-        function fecharModal() {
-            const modal = document.getElementById('modalConfirmacao');
-            if (modal) modal.classList.add('hidden');
-        }
-    </script>
 </body>
 </html>

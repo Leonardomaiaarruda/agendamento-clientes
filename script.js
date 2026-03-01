@@ -259,11 +259,24 @@ async function consultarHistoricoCliente() {
         
         corpoHistorico.innerHTML = historico.map(h => `
             <tr>
-                <td>${h.data}<br><b>${h.horario}</b></td>
-                <td>${h.servico}</td>
-                <td><span class="badge-status ${h.status === 'Ocupado' ? 'status-azul' : 'status-verde'}">${h.status}</span></td>
-                <td>
-                    ${h.status === 'Ocupado' ? `<button onclick="cancelarAgendamento(${h.linha})" class="btn-cancelar-cliente">Cancelar</button>` : '-'}
+                <td data-label="📅 Data/Hora">
+                    ${h.data}<br><b>${h.horario}</b>
+                </td>
+                <td data-label="✂️ Serviço">
+                    ${h.servico}
+                </td>
+                <td data-label="💰 Valor">
+                    <span style="color: #27ae60; font-weight: bold;">R$ ${h.preco || '0,00'}</span>
+                </td>
+                <td data-label="📌 Status">
+                    <span class="badge-status ${h.status === 'Ocupado' ? 'status-azul' : 'status-verde'}">
+                        ${h.status}
+                    </span>
+                </td>
+                <td data-label="⚙️ Ação">
+                    ${h.status === 'Ocupado' ? 
+                        `<button onclick="cancelarAgendamento(${h.linha})" class="btn-cancelar-cliente">Cancelar</button>` : 
+                        '-'}
                 </td>
             </tr>
         `).join('');

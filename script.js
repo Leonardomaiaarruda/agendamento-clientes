@@ -150,14 +150,18 @@ async function confirmarAgendamento() {
     const nome = document.getElementById('nomeCliente').value;
     const telComMascara = document.getElementById('telCliente').value;
     const servico = document.getElementById('servicoCliente').value;
-    const nascimento = document.getElementById('nascCliente').value; // Novo campo de segurança
+    const nascimento = document.getElementById('nascCliente').value; 
     const btn = document.getElementById('btnFinalizar');
 
     const telLimpo = telComMascara.replace(/\D/g, "");
 
-    // Validação rigorosa
+    // Validação usando o seu novo sistema de status/mensagens em vez de alert
     if (!nome || telLimpo.length < 10 || !servico || !nascimento) {
-        alert("Por favor, preencha todos os campos, incluindo a sua Data de Nascimento para segurança.");
+        if (typeof exibirStatus === "function") {
+            exibirStatus("⚠️ Preencha todos os campos, incluindo Nascimento.");
+        } else {
+            alert("Por favor, preencha todos os campos.");
+        }
         return;
     }
 
@@ -170,7 +174,7 @@ async function confirmarAgendamento() {
         cliente: nome,
         whatsapp: telLimpo,
         servico: servico,
-        nascimento: nascimento // Enviado para a nova coluna na planilha
+        nascimento: nascimento 
     };
 
     try {
@@ -180,29 +184,36 @@ async function confirmarAgendamento() {
             body: JSON.stringify(dados)
         });
 
+        // Preparação de dados para o WhatsApp e Calendário
         const dataInput = document.getElementById('dataCliente').value;
         const [ano, mes, dia] = dataInput.split('-');
         const dataFormatada = `${dia}/${mes}/${ano}`;
         const resumoTexto = document.getElementById('resumo').innerText; 
         const horaAgendada = resumoTexto.split('Horário:')[1]?.trim() || "";
 
-        alert("✅ Agendamento realizado com sucesso!");
-
-        // Sugestão de Calendário
-        if (confirm("Deseja salvar este horário na agenda do seu telemóvel?")) {
-            gerarLinkCalendario(nome, servico, dataInput, horaAgendada);
+        // --- TROCA DO ALERT PELO MODAL PERSONALIZADO ---
+        if (typeof mostrarSucesso === "function") {
+            mostrarSucesso("Agendado!", "✅ Agendamento realizado com sucesso! Esperamos por você.");
         }
 
-        // WhatsApp
+        // WhatsApp: Dispara a mensagem automática
         const textoMsg = `✅ *AGENDAMENTO CONFIRMADO*\n\n👤 *Cliente:* ${nome}\n✂️ *Serviço:* ${servico}\n📅 *Data:* ${dataFormatada}\n⏰ *Horário:* ${horaAgendada}\n\n_Segurança: Acesso à consulta via Data de Nascimento._`;
         const linkWhats = `https://wa.me/55${telLimpo}?text=${encodeURIComponent(textoMsg)}`;
-        window.open(linkWhats, '_blank');
+        
+        // Abre o WhatsApp após um pequeno delay para o cliente ver o sucesso
+        setTimeout(() => {
+            window.open(linkWhats, '_blank');
+        }, 2000);
 
+        // Limpeza e atualização da tela
         fecharModal();
-        buscarDisponibilidade();
+        if (typeof buscarDisponibilidade === "function") buscarDisponibilidade();
 
     } catch (e) {
-        alert("Erro ao gravar dados. Tente novamente.");
+        console.error(e);
+        if (typeof exibirStatus === "function") {
+            exibirStatus("❌ Erro ao gravar dados. Tente novamente.");
+        }
     } finally {
         btn.innerText = "Confirmar Agendamento";
         btn.disabled = false;
@@ -211,69 +222,103 @@ async function confirmarAgendamento() {
 
 // 8. Consulta de histórico (Comparação sem caracteres especiais)
 async function consultarHistoricoCliente() {
-    const whatsField = document.getElementById('whatsConsulta');
-    const nascField = document.getElementById('nascConsulta');
-    const resultadoDiv = document.getElementById('resultadoConsulta');
-    const corpoHistorico = document.getElementById('corpoHistorico');
+    const whatsInput = document.getElementById('whatsConsulta').value.replace(/\D/g, '');
+    const nascInput = document.getElementById('nascConsulta').value; 
     const resumoDiv = document.getElementById('resumoCliente');
+    const corpoHistorico = document.getElementById('corpoHistorico');
+    const resultadoDiv = document.getElementById('resultadoConsulta');
 
-    // Limpa o número para comparar apenas dígitos
-    const whatsLimpo = whatsField.value.replace(/\D/g, '');
-    const nascValor = nascField.value; // Formato YYYY-MM-DD
-
-    if (whatsLimpo.length < 10 || !nascValor) {
-        alert("⚠️ Informe o WhatsApp e a Data de Nascimento para acessar.");
+    if (whatsInput.length < 10 || !nascInput) {
+        alert("Por favor, preencha o WhatsApp e a Data de Nascimento.");
         return;
     }
 
-    resumoDiv.innerHTML = "⏳ Verificando identidade...";
+    resumoDiv.innerHTML = "⏳ Validando acesso...";
     resultadoDiv.classList.remove('hidden');
-    corpoHistorico.innerHTML = "";
 
     try {
-        const response = await fetch(`${URL_WEB_APP}?action=read`);
-        const data = await response.json();
-        const todos = data.horarios || [];
-
-        // Filtro Seguro: WhatsApp E Nascimento
-        const meusAgendamentos = todos.filter(h => {
-            const whatsPlanilha = String(h.whatsapp).replace(/\D/g, '');
-            const nascPlanilha = h.nascimento ? h.nascimento.split('T')[0] : "";
-            return whatsPlanilha === whatsLimpo && nascPlanilha === nascValor;
+        const res = await fetch(`${URL_WEB_APP}?action=read`);
+        const data = await res.json();
+        
+        // Aqui o 'h' representa cada HORÁRIO vindo da planilha
+        const historico = (data.horarios || []).filter(h => {
+            const whatsPlanilha = String(h.whatsapp || "").replace(/\D/g, '');
+            // Limpa a data da planilha para comparar (YYYY-MM-DD)
+            const nascPlanilha = h.nascimento ? String(h.nascimento).split('T')[0].trim() : ""; 
+            
+            return whatsPlanilha === whatsInput && nascPlanilha === nascInput;
         });
 
-        if (meusAgendamentos.length === 0) {
-            resumoDiv.innerHTML = "❌ Dados não conferem ou nenhum registro encontrado.";
+        if (historico.length === 0) {
+            resumoDiv.innerHTML = "❌ Dados incorretos ou nenhum agendamento encontrado.";
+            corpoHistorico.innerHTML = "";
             return;
         }
 
-        resumoDiv.innerHTML = `<div class="card-resumo">Olá, <b>${meusAgendamentos[0].cliente}</b>! Aqui está seu histórico:</div>`;
+        resumoDiv.innerHTML = `✅ Olá, <b>${historico[0].cliente}</b>! Encontramos seus registros.`;
+        
+        corpoHistorico.innerHTML = historico.map(h => `
+            <tr>
+                <td>${h.data}<br><b>${h.horario}</b></td>
+                <td>${h.servico}</td>
+                <td><span class="badge-status ${h.status === 'Ocupado' ? 'status-azul' : 'status-verde'}">${h.status}</span></td>
+                <td>
+                    ${h.status === 'Ocupado' ? `<button onclick="cancelarAgendamento(${h.linha})" class="btn-cancelar-cliente">Cancelar</button>` : '-'}
+                </td>
+            </tr>
+        `).join('');
 
-        corpoHistorico.innerHTML = meusAgendamentos.map(h => {
-            const dataF = h.data.split('T')[0].split('-').reverse().join('/');
-            const statusClasse = h.status === "Ocupado" ? "status-azul" : "status-verde";
-            const acao = h.status === "Ocupado" ? 
-                `<button class="btn-cancelar-cliente" onclick="cancelarPeloCliente(${h.linha})">Desmarcar</button>` : "-";
-
-            return `
-                <tr>
-                    <td>${dataF}<br><b>${h.horario}</b></td>
-                    <td>${h.servico || '---'}</td>
-                    <td><span class="badge-status ${statusClasse}">${h.status === 'Ocupado' ? 'Agendado' : h.status}</span></td>
-                    <td>${acao}</td>
-                </tr>
-            `;
-        }).join('');
-
-    } catch (error) {
-        console.error(error);
+    } catch (e) {
         resumoDiv.innerHTML = "❌ Erro ao conectar com o servidor.";
+        console.error("Erro na consulta:", e);
     }
 }
 
 // 9. Cancela o horário (Botão Desmarcar)
-async function cancelarPeloCliente(linha) {
-    if (!confirm("Deseja desmarcar este horário?")) return;
+// Variável global para guardar qual linha cancelar
+let linhaParaCancelar = null;
+
+function fecharModalCustom() {
+    document.getElementById('modalConfirmacaoCustom').classList.add('hidden');
+}
+
+// Esta é a função que o botão da tabela chama
+async function cancelarAgendamento(linha) {
+    linhaParaCancelar = linha; // Guarda a linha
+    document.getElementById('modalConfirmacaoCustom').classList.remove('hidden'); // Abre o modal
+    
+    // Configura o clique do botão de confirmação dentro do modal
+    document.getElementById('btnConfirmarCancela').onclick = async function() {
+        fecharModalCustom();
+        processarCancelamento(linhaParaCancelar);
+    };
+}
+
+// Função para abrir o modal de sucesso com mensagem variável
+function mostrarSucesso(titulo, mensagem) {
+    const modal = document.getElementById('modalSucesso');
+    const t = document.getElementById('tituloSucesso');
+    const m = document.getElementById('mensagemSucesso');
+
+    if (modal && t && m) {
+        t.innerText = titulo;
+        m.innerText = mensagem;
+        modal.classList.remove('hidden');
+
+        // Fecha automaticamente após 4 segundos para dar tempo do cliente ler
+        setTimeout(() => {
+            fecharModalSucesso();
+        }, 4000);
+    }
+}
+
+function fecharModalSucesso() {
+    document.getElementById('modalSucesso').classList.add('hidden');
+}
+
+// Atualização da função de processamento
+async function processarCancelamento(linha) {
+    if (typeof exibirStatus === "function") exibirStatus("⏳ A cancelar...");
 
     try {
         await fetch(URL_WEB_APP, {
@@ -282,10 +327,20 @@ async function cancelarPeloCliente(linha) {
             body: JSON.stringify({ action: "liberarHorario", linha: linha })
         });
         
-        alert("✅ Cancelado!");
-        consultarHistoricoCliente(); 
+        // --- AQUI ESTÁ A MUDANÇA: JANELA PERSONALIZADA EM VEZ DE ALERT ---
+        mostrarSucesso("Cancelado!", "O seu horário foi libertado com sucesso.");
+
+        // Atualiza as listas
+        setTimeout(() => {
+            if (typeof consultarHistoricoCliente === "function") consultarHistoricoCliente(); 
+            if (typeof listarAgendaClientes === "function") listarAgendaClientes();
+            if (typeof listarHorarios === "function") listarHorarios();
+        }, 1000);
+
     } catch (e) {
-        alert("Erro ao cancelar.");
+        console.error(e);
+        // Pode criar um mostrarErro() seguindo a mesma lógica se desejar
+        alert("Erro ao conectar com o servidor.");
     }
 }
 
@@ -362,3 +417,23 @@ function gerarLinkCalendario(nome, servico, dataISO, hora) {
         window.open(googleUrl, '_blank');
     }
 }
+
+function abrirModalConsulta() {
+    const modal = document.getElementById('modalConsulta');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Trava o fundo
+}
+
+function fecharModalConsulta() {
+    const modal = document.getElementById('modalConsulta');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Libera o fundo
+}
+
+// Fecha se clicar na parte escura (fora da caixa branca)
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('modalConsulta');
+    if (event.target === modal) {
+        fecharModalConsulta();
+    }
+});

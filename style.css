@@ -144,9 +144,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    ========================================= */
 #listaHorarios {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
 }
 
 .btn-hora {
@@ -320,15 +319,179 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     text-decoration: underline;
 }
 
+/* Destaque para campos de segurança */
+#nascConsulta, #nascCliente {
+    border-left: 4px solid var(--primary); /* Barra dourada lateral */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23d4af37" viewBox="0 0 16 16"><path d="M8 1s5 2 5 6c0 4.5-5 8-5 8s-5-3.5-5-8c0-4 5-6 5-6z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+/* Tooltip ou texto de ajuda sob o campo */
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.75rem;
+    color: var(--primary);
+    opacity: 0.8;
+}
+
 /* =========================================
    UTILITÁRIOS E RESPONSIVIDADE
    ========================================= */
-.hidden { display: none; }
+.hidden { 
+    display: none !important; 
+}
 
 .loading-skeleton {
     animation: pulse-gray 1.8s infinite ease-in-out;
     background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
     background-size: 400% 400%;
+}
+
+/* Botão Superior Direito */
+.btn-abrir-consulta {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 10px 15px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 100;
+    transition: var(--transition);
+}
+
+.btn-abrir-consulta:hover {
+    background: var(--primary);
+    color: black;
+}
+
+/* Modal Full Screen com Desfoque */
+.modal-full {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex; /* O navegador usará isso por padrão */
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.modal-full-content {
+    background: var(--card-bg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid var(--primary);
+    position: relative;
+    overflow-y: auto; /* Permite scroll se a tabela for grande */
+}
+
+/* O "X" para fechar */
+.btn-fechar-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.btn-fechar-modal:hover {
+    color: var(--danger);
+}
+
+.modal-custom {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+
+.modal-custom-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: zoomIn 0.3s ease;
+}
+
+.modal-custom-icon { font-size: 3rem; margin-bottom: 10px; }
+
+.modal-custom-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.btn-confirmar-msg {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-voltar-msg {
+    background: #bdc3c7;
+    color: #2c3e50;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.modal-custom h3, p {
+    color:rgb(32, 32, 32);
+}
+
+/* Estilo específico para o botão de sucesso */
+.btn-sucesso-ok {
+    background: #27ae60 !important;
+    color: white !important;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-sucesso-ok:hover {
+    background: #219150 !important;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Responsividade para o botão no mobile */
+@media (max-width: 480px) {
+    .btn-abrir-consulta {
+        top: 10px;
+        right: 10px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
 }
 
 @keyframes pulse-gray {

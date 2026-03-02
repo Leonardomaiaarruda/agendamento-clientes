@@ -10,11 +10,11 @@
     --input-bg: #2a2a2a;
     --text: #ffffff;
     --text-muted: #a0a0a0;
-    --success: #28a745;
-    --danger: #dc3545;
+    --success: #27ae60;
+    --danger: #e74c3c;
     --info: #3498db;
     --shadow: 0 8px 25px rgba(0,0,0,0.7);
-    --transition: all 0.3s ease;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -29,8 +29,10 @@ body {
     color: var(--text);
     line-height: 1.6;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     padding: 20px;
+    min-height: 100vh;
 }
 
 .container {
@@ -39,11 +41,37 @@ body {
 }
 
 /* =========================================
+   BOTÃO SUPERIOR (MEUS AGENDAMENTOS)
+   ========================================= */
+.btn-abrir-consulta {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 100;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.btn-abrir-consulta:hover {
+    background: var(--primary);
+    color: black;
+    transform: translateY(-2px);
+}
+
+/* =========================================
    CABEÇALHO
    ========================================= */
 header {
     text-align: center;
     margin-bottom: 35px;
+    margin-top: 40px;
 }
 
 header h1 {
@@ -58,13 +86,12 @@ header h1 {
 header p {
     color: var(--text-muted);
     font-size: 0.95rem;
-    font-style: italic;
 }
 
 /* =========================================
    CARDS E SEÇÕES
    ========================================= */
-.section-card, .container-consulta {
+.section-card {
     background: var(--card-bg);
     padding: 25px;
     border-radius: 15px;
@@ -74,49 +101,84 @@ header p {
     transition: var(--transition);
 }
 
-.section-card:hover {
-    border-color: #444;
-}
-
-.section-title, .container-consulta h3 {
-    font-size: 1.1rem;
+.section-title {
+    font-size: 1rem;
     font-weight: bold;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 12px;
     color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.section-title span {
-    background: var(--primary);
-    color: black;
-    width: 24px;
-    height: 24px;
+.icon-premium {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    font-size: 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--primary);
 }
 
 /* =========================================
-   FORMULÁRIOS E INPUTS
+   GRADE DE SERVIÇOS (AQUI ESTÃO AS FUNÇÕES VISUAIS)
    ========================================= */
-.form-group {
-    margin-bottom: 18px;
-    position: relative;
+.grid-servicos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
 }
+
+.item-servico {
+    background: var(--input-bg);
+    border: 1px solid #444;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 80px;
+}
+
+.item-servico input { display: none; }
+
+.item-servico.selecionado {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(212, 175, 55, 0.1);
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+
+.preco-tag {
+    color: var(--success);
+    font-weight: bold;
+    margin-top: 5px;
+    display: block;
+}
+
+/* =========================================
+   INPUTS E FORMULÁRIOS
+   ========================================= */
+.form-group { margin-bottom: 20px; }
 
 label {
     display: block;
     font-size: 0.85rem;
     margin-bottom: 8px;
     color: var(--text-muted);
-    font-weight: 500;
 }
 
-select, input {
+input {
     width: 100%;
     padding: 14px;
     background: var(--input-bg);
@@ -128,23 +190,14 @@ select, input {
     transition: var(--transition);
 }
 
-select:focus, input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
-}
-
-/* Estilo para campos "Seguros" (Cadeado simbólico) */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-}
+input:focus { border-color: var(--primary); }
 
 /* =========================================
    GRADE DE HORÁRIOS
    ========================================= */
-#listaHorarios {
+.lista-horarios {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     gap: 10px;
 }
 
@@ -152,383 +205,263 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background: #252525;
     border: 1px solid #444;
     color: var(--text);
-    padding: 12px 5px;
+    padding: 12px;
     border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
 }
 
-.btn-hora:hover:not(:disabled) {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-2px);
-}
-
-.btn-hora.selecionado {
-    background-color: var(--primary) !important;
-    color: #000 !important;
-    border-color: var(--primary);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
-}
-
-.btn-hora:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    text-decoration: line-through;
-}
+.btn-hora:hover { border-color: var(--primary); color: var(--primary); }
 
 /* =========================================
-   ÁREA DE CONSULTA E HISTÓRICO
+   TABELA DE HISTÓRICO (PROFISSIONAL)
    ========================================= */
-.input-grupo-seguro {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.btn-buscar {
-    background: var(--primary);
-    color: black;
-    border: none;
-    padding: 14px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: var(--transition);
-}
-
-.btn-buscar:hover {
-    background: var(--primary-hover);
-    transform: scale(1.02);
-}
-
-.tabela-responsiva {
+.tabela-container {
     overflow-x: auto;
-    margin-top: 20px;
-    border-radius: 12px;
-    border: 1px solid #333;
+    margin-top: 15px;
 }
 
 .tabela-historico {
     width: 100%;
     border-collapse: collapse;
-    background: #1a1a1a;
 }
 
-.tabela-historico th {
+.tabela-historico thead th {
     background: #252525;
     color: var(--primary);
-    padding: 15px 10px;
+    padding: 12px;
+    text-align: left;
     font-size: 0.8rem;
     text-transform: uppercase;
+    border-bottom: 2px solid var(--primary);
 }
 
 .tabela-historico td {
-    padding: 15px 10px;
+    padding: 12px;
     border-bottom: 1px solid #333;
     font-size: 0.9rem;
 }
 
-/* STATUS BADGES */
+/* BADGES DE STATUS */
 .badge-status {
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: bold;
 }
 
-.status-verde { background: rgba(40, 167, 69, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+.status-verde { background: rgba(39, 174, 96, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
 .status-azul { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; }
 
-.card-resumo {
-    background: linear-gradient(135deg, var(--primary), #b8860b);
-    color: black;
-    padding: 15px;
-    border-radius: 10px;
-    margin: 20px 0;
-    text-align: center;
-    font-weight: bold;
-}
-
 /* =========================================
-   MODAL DE FINALIZAÇÃO
+   MODAIS (RESTAURADOS)
    ========================================= */
-.modal {
+.modal, .modal-custom {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 2000; padding: 20px;
-    backdrop-filter: blur(5px);
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: none; /* Controlado via JS e classe .hidden */
+    align-items: center; justify-content: center;
+    z-index: 9999999; padding: 20px;
 }
 
-.modal-content {
+/* Garante que o modal aparece quando a classe hidden é removida */
+#modalConfirmacao:not(.hidden), 
+#modalConsulta:not(.hidden),
+#modalConfirmacaoCustom:not(.hidden),
+#modalSucesso:not(.hidden) {
+    display: flex !important;
+}
+
+.modal-content, .modal-custom-content {
     background: var(--card-bg);
-    width: 100%;
-    max-width: 420px;
     padding: 30px;
     border-radius: 20px;
     border: 1px solid var(--primary);
-    box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+    width: 100%;
+    max-width: 500px;
+    animation: zoomIn 0.3s ease forwards;
 }
 
-.resumo-agendamento {
-    background: #252525;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border-left: 4px solid var(--primary);
-    text-align: left;
-    font-size: 0.9rem;
+@keyframes zoomIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
-.btn-confirmar {
+/* =========================================
+   BOTÕES DE AÇÃO
+   ========================================= */
+.btn-confirmar, .btn-confirmar-msg {
     background: var(--primary);
     color: black;
     border: none;
     padding: 16px;
     border-radius: 12px;
     width: 100%;
-    font-weight: 800;
-    font-size: 1rem;
+    font-weight: bold;
     cursor: pointer;
+    transition: var(--transition);
     margin-top: 10px;
-    transition: var(--transition);
 }
 
-.btn-confirmar:hover {
-    background: var(--primary-hover);
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-}
+.btn-confirmar:hover { background: var(--primary-hover); transform: scale(1.02); }
 
-.btn-cancelar {
-    background: transparent;
-    color: var(--text-muted);
-    border: none;
-    margin-top: 15px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: var(--transition);
-}
-
-.btn-cancelar:hover {
-    color: white;
-    text-decoration: underline;
-}
-
-/* Destaque para campos de segurança */
-#nascConsulta, #nascCliente {
-    border-left: 4px solid var(--primary); /* Barra dourada lateral */
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23d4af37" viewBox="0 0 16 16"><path d="M8 1s5 2 5 6c0 4.5-5 8-5 8s-5-3.5-5-8c0-4 5-6 5-6z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-}
-
-/* Tooltip ou texto de ajuda sob o campo */
-.form-group small {
-    display: block;
-    margin-top: 5px;
-    font-size: 0.75rem;
-    color: var(--primary);
-    opacity: 0.8;
-}
-
-/* =========================================
-   UTILITÁRIOS E RESPONSIVIDADE
-   ========================================= */
-.hidden { 
-    display: none !important; 
-}
-
-.loading-skeleton {
-    animation: pulse-gray 1.8s infinite ease-in-out;
-    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
-    background-size: 400% 400%;
-}
-
-/* Botão Superior Direito */
-.btn-abrir-consulta {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--card-bg);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-    padding: 10px 15px;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 100;
-    transition: var(--transition);
-}
-
-.btn-abrir-consulta:hover {
-    background: var(--primary);
-    color: black;
-}
-
-/* Modal Full Screen com Desfoque */
-.modal-full {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    display: flex; /* O navegador usará isso por padrão */
-    justify-content: center;
-    align-items: center;
-    z-index: 3000;
-}
-
-.modal-full-content {
-    background: var(--card-bg);
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    padding: 30px;
-    border-radius: 20px;
-    border: 1px solid var(--primary);
-    position: relative;
-    overflow-y: auto; /* Permite scroll se a tabela for grande */
-}
-
-/* O "X" para fechar */
-.btn-fechar-modal {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 30px;
-    color: var(--text-muted);
-    cursor: pointer;
-    line-height: 1;
-}
-
-.btn-fechar-modal:hover {
-    color: var(--danger);
-}
-
-.modal-custom {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 9999;
-}
-
-.modal-custom-content {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    animation: zoomIn 0.3s ease;
-}
-
-.modal-custom-icon { font-size: 3rem; margin-bottom: 10px; }
-
-.modal-custom-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    justify-content: center;
-}
-
-.btn-confirmar-msg {
-    background: #e74c3c;
+.btn-cancelar-cliente {
+    background: var(--danger);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
     cursor: pointer;
-    font-weight: bold;
 }
 
 .btn-voltar-msg {
-    background: #bdc3c7;
-    color: #2c3e50;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 10px;
+    width: 100%;
+    margin-top: 10px;
     cursor: pointer;
-    font-weight: bold;
-}
-.modal-custom h3, p {
-    color:rgb(32, 32, 32);
 }
 
-/* Estilo específico para o botão de sucesso */
-.btn-sucesso-ok {
-    background: #27ae60 !important;
-    color: white !important;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 8px;
+/* Configuração para todos os modais (Agendamento e Consulta) */
+.modal, .modal-full {
+    position: fixed;            /* Fixa na tela, independente do scroll */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;             /* Ocupa toda a altura da visão */
+    background: rgba(0, 0, 0, 0.7); /* Fundo escuro semi-transparente */
+    backdrop-filter: blur(8px); /* Efeito de desfoque no fundo */
+    -webkit-backdrop-filter: blur(8px); /* Compatibilidade Safari */
+    display: none;              /* Escondido por padrão */
+    align-items: center;        /* Centraliza verticalmente */
+    justify-content: center;   /* Centraliza horizontalmente */
+    z-index: 9999;              /* Garante que fique acima de tudo */
+    padding: 20px;
+}
+
+/* Quando a classe .hidden é removida pelo JS, usamos display flex para centralizar */
+.modal:not(.hidden), 
+.modal-full:not(.hidden) {
+    display: flex !important;
+}
+
+/* Ajuste do conteúdo interno para não ficar gigante */
+.modal-content, .modal-full-content {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid var(--primary);
+    width: 100%;
+    max-width: 500px;           /* Limita a largura */
+    max-height: 90vh;          /* Evita que saia da tela se for muito grande */
+    overflow-y: auto;          /* Permite scroll apenas dentro do modal se necessário */
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: modalAparecer 0.3s ease-out;
+}
+
+.btn-fechar-modal {
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-bottom: 4px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s;
+    color: rgb(255, 255, 255);
+    border: 1px solid white;
+    border-radius: 5px; background-color: red;
 }
 
-.btn-sucesso-ok:hover {
-    background: #219150 !important;
+/* Botão Verificar e Acessar */
+.btn-buscar {
+    background: linear-gradient(135deg, var(--primary) 0%, #b8860b 100%);
+    color: #000;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    width: 100%;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-@keyframes zoomIn {
+.btn-buscar:hover {
+    background: linear-gradient(135deg, #f1c40f 0%, var(--primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.btn-buscar:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+}
+
+/* Efeito de carregamento (opcional para quando clicar) */
+.btn-buscar:disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Animação para o modal surgir suavemente */
+@keyframes modalAparecer {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 
-/* Responsividade para o botão no mobile */
-@media (max-width: 768px) {
-    /* Faz o container do topo empilhar os itens */
-    body {
-        display: flex;
-        flex-direction: column;
-    }
 
-    /* Move o botão de Meus Agendamentos para baixo do título */
+/* =========================================
+   RESPONSIVIDADE MOBILE
+   ========================================= */
+@media (max-width: 600px) {
     .btn-abrir-consulta {
-        position: relative; /* Remove o posicionamento fixo/absoluto */
-        top: 0;
-        right: 0;
-        margin: 10px auto 20px auto; /* Centraliza e dá espaço */
-        order: 2; /* Garante que ele fique após o header se necessário */
-        width: 90%;
+        position: relative;
+        top: 0; right: 0;
+        width: 100%;
+        margin-bottom: 20px;
     }
 
-    header {
-        order: 1;
+    .tabela-historico thead { display: none; }
+    
+    .tabela-historico tr {
+        display: block;
+        background: #252525;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        border: 1px solid #444;
     }
 
-    /* Estilo para a tabela virar card (conforme solicitado) */
     .tabela-historico td {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px;
+        padding: 10px 15px;
+        border-bottom: 1px solid #333;
         text-align: right;
-        border-bottom: 1px solid #eee;
     }
 
     .tabela-historico td::before {
-        content: attr(data-label); /* Aqui a mágica do JS acontece */
+        content: attr(data-label);
         font-weight: bold;
+        color: var(--primary);
         text-align: left;
     }
 }
 
-@keyframes pulse-gray {
-    0% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-@media (max-width: 400px) {
-    #listaHorarios { grid-template-columns: repeat(2, 1fr); }
-    header h1 { font-size: 1.5rem; }
-}
+/* UTILITÁRIOS */
+.hidden { display: none !important; }

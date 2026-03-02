@@ -19,7 +19,7 @@
 </head>
 <body>
 
-    <button class="btn-abrir-consulta" onclick="abrirModalConsulta()">
+    <button class="btn-abrir-consulta" onclick="abrirModalConsulta()" aria-label="Ver meus agendamentos">
         🔍 Meus Agendamentos
     </button>
 
@@ -30,23 +30,30 @@
         </header>
 
         <section class="section-card">
-            <div class="section-title"><span>1.</span> Selecione o Serviço</div> 
-            <div class="form-group">
-                <select id="servicoCliente" onchange="buscarDisponibilidade()">
-                    <option value="" disabled selected>Carregando serviços e preços...</option>
-                </select>
+            <div class="section-title">
+                <div class="icon-premium">✂️</div> 
+                <span>1. Selecione os Serviços</span>
+            </div>
+            <div id="containerServicos" class="grid-servicos">
+                <p class="instrucao">Carregando serviços...</p>
             </div>
         </section>
 
-        <section class="section-card">
-            <div class="section-title"><span>2.</span> Para quando?</div>
+        <section class="section-card"> 
+            <div class="section-title">
+                <div class="icon-premium">📅</div> 
+                <span>2. Escolha a Data</span>
+            </div>
             <div class="form-group">
                 <input type="date" id="dataCliente" onchange="buscarDisponibilidade()">
             </div>
         </section>
 
         <section class="section-card">
-            <div class="section-title"><span>3.</span> Horários Disponíveis</div>
+            <div class="section-title">
+                <div class="icon-premium">⏰</div> 
+                <span>3. Horários Disponíveis</span>
+            </div>
             <div id="listaHorarios" class="lista-horarios">
                 <p class="instrucao">Selecione uma data para ver as vagas.</p>
             </div>
@@ -55,8 +62,7 @@
         <div id="modalConfirmacao" class="modal hidden">
             <div class="modal-content">
                 <h3>Finalizar Agendamento</h3>
-                <div id="resumo" class="resumo-agendamento">
-                    </div>
+                <div id="resumo" class="resumo-agendamento"></div>
                 
                 <div class="form-group">
                     <label for="nomeCliente">Seu Nome</label>
@@ -85,7 +91,7 @@
 
         <div id="modalConsulta" class="modal-full hidden">
             <div class="modal-full-content">
-                <span class="btn-fechar-modal" onclick="fecharModalConsulta()">&times;</span>
+                <span class="btn-fechar-modal" onclick="fecharModalConsulta()">x</span>
                 
                 <h3>🔍 Meus Agendamentos</h3>
                 <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
@@ -94,12 +100,12 @@
                 
                 <div class="input-grupo-seguro">
                     <div class="form-group">
-                        <label>Seu WhatsApp</label>
+                        <label for="whatsConsulta">Seu WhatsApp</label>
                         <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric">
                     </div>
                     
                     <div class="form-group">
-                        <label>Data de Nascimento</label>
+                        <label for="nascConsulta">Data de Nascimento</label>
                         <input type="date" id="nascConsulta">
                     </div>
                     
@@ -111,7 +117,13 @@
                     <div class="tabela-responsiva">
                         <table class="tabela-historico">
                             <thead>
-                               
+                                <tr>
+                                    <th>📅 Data/Hora</th>
+                                    <th>✂️ Serviço</th>
+                                    <th>💰 Total</th>
+                                    <th>📌 Status</th>
+                                    <th>⚙️ Ações</th>
+                                </tr>
                             </thead>
                             <tbody id="corpoHistorico"></tbody>
                         </table>
@@ -127,7 +139,7 @@
             <h3>Confirmar Cancelamento</h3>
             <p>Você realmente deseja desmarcar este horário? Esta ação não pode ser desfeita.</p>
             <div class="modal-custom-buttons">
-                <button id="btnConfirmarCancela" class="btn-confirmar-msg">Sim, Cancelar</button>
+                <button id="btnConfirmarCancela" onclick="confirmarCancelamento()" class="btn-confirmar-msg">Sim, Cancelar</button>
                 <button onclick="fecharModalCustom()" class="btn-voltar-msg">Voltar</button>
             </div>
         </div>

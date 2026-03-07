@@ -1,467 +1,321 @@
-/* =========================================
-   CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
-   ========================================= */
-:root {
-    --primary: #d4af37;        /* Dourado Premium */
-    --primary-hover: #f1c40f;
-    --secondary: #1e1e1e;
-    --bg: #121212;             /* Fundo Deep Black */
-    --card-bg: #1c1c1c;
-    --input-bg: #2a2a2a;
-    --text: #ffffff;
-    --text-muted: #a0a0a0;
-    --success: #27ae60;
-    --danger: #e74c3c;
-    --info: #3498db;
-    --shadow: 0 8px 25px rgba(0,0,0,0.7);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+// =========================================
+// CONFIGURAÇÕES GLOBAIS - SUPABASE
+// =========================================
+const SUPABASE_URL = "https://ddqqtzwaxsgkbrnfjikv.supabase.co"; 
+const SUPABASE_KEY = "sb_publishable__-43znJ2AImyNshY5nsTvA_Q5JUvFUV"; 
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const BARBEARIA_ID = "817597d5-9a4b-4c6a-ab3b-9969a2d3999d"; 
+
+let idAgendamentoSelecionado = null; 
+let horarioSelecionado = "";
+let servicosSelecionados = [];
+let idParaCancelar = null;
+
+// 1. Inicialização
+window.addEventListener('DOMContentLoaded', () => {
+    configurarCalendario();
+    carregarServicos();
+    buscarDisponibilidade(); 
+    aplicarMascaraTelefone('telCliente');   
+    aplicarMascaraTelefone('whatsConsulta');
+});
+
+// 2. Configurações de Data e Máscaras
+function configurarCalendario() {
+    const inputData = document.getElementById('dataCliente');
+    if (!inputData) return;
+    const hoje = new Date();
+    const dataIso = hoje.toISOString().split('T')[0];
+    inputData.setAttribute('min', dataIso);
+    inputData.value = dataIso;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+function aplicarMascaraTelefone(id) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, "");
+        if (v.length > 11) v = v.slice(0, 11);
+        v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+        v = v.replace(/(\d{5})(\d)/, "$1-$2");
+        e.target.value = v;
+    });
 }
 
-body {
-    background-color: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    min-height: 100vh;
-}
+// 3. Lógica de Serviços
+async function carregarServicos() {
+    const container = document.getElementById('containerServicos');
+    try {
+        const { data: servicos, error } = await _supabase
+            .from('servicos')
+            .select('nome, preco')
+            .eq('barbearia_id', BARBEARIA_ID);
 
-.container {
-    width: 100%;
-    max-width: 500px;
-}
+        if (error) throw error;
 
-/* =========================================
-   BOTÃO SUPERIOR (MEUS AGENDAMENTOS)
-   ========================================= */
-.btn-abrir-consulta {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--card-bg);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 100;
-    transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.btn-abrir-consulta:hover {
-    background: var(--primary);
-    color: black;
-    transform: translateY(-2px);
-}
-
-/* =========================================
-   CABEÇALHO
-   ========================================= */
-header {
-    text-align: center;
-    margin-bottom: 35px;
-    margin-top: 40px;
-}
-
-header h1 {
-    font-size: 2rem;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    margin-bottom: 5px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-header p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-}
-
-/* =========================================
-   CARDS E SEÇÕES
-   ========================================= */
-.section-card {
-    background: var(--card-bg);
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: var(--shadow);
-    margin-bottom: 25px;
-    border: 1px solid #333;
-    transition: var(--transition);
-}
-
-.section-title {
-    font-size: 1rem;
-    font-weight: bold;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.icon-premium {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
-    width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    border: 1px solid var(--primary);
-}
-
-/* =========================================
-   GRADE DE SERVIÇOS (AQUI ESTÃO AS FUNÇÕES VISUAIS)
-   ========================================= */
-.grid-servicos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-}
-
-.item-servico {
-    background: var(--input-bg);
-    border: 1px solid #444;
-    padding: 15px;
-    border-radius: 10px;
-    cursor: pointer;
-    text-align: center;
-    transition: var(--transition);
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 80px;
-}
-
-.item-servico input { display: none; }
-
-.item-servico.selecionado {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: rgba(212, 175, 55, 0.1);
-    transform: scale(1.03);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
-}
-
-.preco-tag {
-    color: var(--success);
-    font-weight: bold;
-    margin-top: 5px;
-    display: block;
-}
-
-/* =========================================
-   INPUTS E FORMULÁRIOS
-   ========================================= */
-.form-group { margin-bottom: 20px; }
-
-label {
-    display: block;
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-    color: var(--text-muted);
-}
-
-input {
-    width: 100%;
-    padding: 14px;
-    background: var(--input-bg);
-    border: 1px solid #444;
-    border-radius: 10px;
-    color: white;
-    font-size: 1rem;
-    outline: none;
-    transition: var(--transition);
-}
-
-input:focus { border-color: var(--primary); }
-
-/* =========================================
-   GRADE DE HORÁRIOS
-   ========================================= */
-.lista-horarios {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 10px;
-}
-
-.btn-hora {
-    background: #252525;
-    border: 1px solid #444;
-    color: var(--text);
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-hora:hover { border-color: var(--primary); color: var(--primary); }
-
-/* =========================================
-   TABELA DE HISTÓRICO (PROFISSIONAL)
-   ========================================= */
-.tabela-container {
-    overflow-x: auto;
-    margin-top: 15px;
-}
-
-.tabela-historico {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.tabela-historico thead th {
-    background: #252525;
-    color: var(--primary);
-    padding: 12px;
-    text-align: left;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--primary);
-}
-
-.tabela-historico td {
-    padding: 12px;
-    border-bottom: 1px solid #333;
-    font-size: 0.9rem;
-}
-
-/* BADGES DE STATUS */
-.badge-status {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
-
-.status-verde { background: rgba(39, 174, 96, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
-.status-azul { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; }
-
-/* =========================================
-   MODAIS (RESTAURADOS)
-   ========================================= */
-.modal, .modal-custom {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(8px);
-    display: none; /* Controlado via JS e classe .hidden */
-    align-items: center; justify-content: center;
-    z-index: 9999999; padding: 20px;
-}
-
-/* Garante que o modal aparece quando a classe hidden é removida */
-#modalConfirmacao:not(.hidden), 
-#modalConsulta:not(.hidden),
-#modalConfirmacaoCustom:not(.hidden),
-#modalSucesso:not(.hidden) {
-    display: flex !important;
-}
-
-.modal-content, .modal-custom-content {
-    background: var(--card-bg);
-    padding: 30px;
-    border-radius: 20px;
-    border: 1px solid var(--primary);
-    width: 100%;
-    max-width: 500px;
-    animation: zoomIn 0.3s ease forwards;
-}
-
-@keyframes zoomIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-/* =========================================
-   BOTÕES DE AÇÃO
-   ========================================= */
-.btn-confirmar, .btn-confirmar-msg {
-    background: var(--primary);
-    color: black;
-    border: none;
-    padding: 16px;
-    border-radius: 12px;
-    width: 100%;
-    font-weight: bold;
-    cursor: pointer;
-    transition: var(--transition);
-    margin-top: 10px;
-}
-
-.btn-confirmar:hover { background: var(--primary-hover); transform: scale(1.02); }
-
-.btn-cancelar-cliente {
-    background: var(--danger);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-.btn-voltar-msg {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid #444;
-    padding: 10px;
-    border-radius: 10px;
-    width: 100%;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-/* Configuração para todos os modais (Agendamento e Consulta) */
-.modal, .modal-full {
-    position: fixed;            /* Fixa na tela, independente do scroll */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;             /* Ocupa toda a altura da visão */
-    background: rgba(0, 0, 0, 0.7); /* Fundo escuro semi-transparente */
-    backdrop-filter: blur(8px); /* Efeito de desfoque no fundo */
-    -webkit-backdrop-filter: blur(8px); /* Compatibilidade Safari */
-    display: none;              /* Escondido por padrão */
-    align-items: center;        /* Centraliza verticalmente */
-    justify-content: center;   /* Centraliza horizontalmente */
-    z-index: 9999;              /* Garante que fique acima de tudo */
-    padding: 20px;
-}
-
-/* Quando a classe .hidden é removida pelo JS, usamos display flex para centralizar */
-.modal:not(.hidden), 
-.modal-full:not(.hidden) {
-    display: flex !important;
-}
-
-/* Ajuste do conteúdo interno para não ficar gigante */
-.modal-content, .modal-full-content {
-    background: var(--card-bg);
-    padding: 30px;
-    border-radius: 20px;
-    border: 1px solid var(--primary);
-    width: 100%;
-    max-width: 500px;           /* Limita a largura */
-    max-height: 90vh;          /* Evita que saia da tela se for muito grande */
-    overflow-y: auto;          /* Permite scroll apenas dentro do modal se necessário */
-    position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    animation: modalAparecer 0.3s ease-out;
-}
-
-.btn-fechar-modal {
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-bottom: 4px;
-    cursor: pointer;
-    color: rgb(255, 255, 255);
-    border: 1px solid white;
-    border-radius: 5px; background-color: red;
-}
-
-/* Botão Verificar e Acessar */
-.btn-buscar {
-    background: linear-gradient(135deg, var(--primary) 0%, #b8860b 100%);
-    color: #000;
-    border: none;
-    padding: 14px 24px;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    width: 100%;
-    transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.btn-buscar:hover {
-    background: linear-gradient(135deg, #f1c40f 0%, var(--primary) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
-}
-
-.btn-buscar:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
-}
-
-/* Efeito de carregamento (opcional para quando clicar) */
-.btn-buscar:disabled {
-    background: #444;
-    color: #888;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Animação para o modal surgir suavemente */
-@keyframes modalAparecer {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-
-/* =========================================
-   RESPONSIVIDADE MOBILE
-   ========================================= */
-@media (max-width: 600px) {
-    .btn-abrir-consulta {
-        position: relative;
-        top: 0; right: 0;
-        width: 100%;
-        margin-bottom: 20px;
+        container.innerHTML = servicos.map(s => `
+            <label class="item-servico" id="label-${s.nome.replace(/\s+/g, '-')}">
+                <input type="checkbox" value="${s.nome} R$ ${s.preco}" onchange="toggleServico(this, '${s.nome} R$ ${s.preco}')">
+                <span>${s.nome}</span>
+                <span class="preco-tag">R$ ${parseFloat(s.preco).toFixed(2).replace('.', ',')}</span>
+            </label>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = "<p>Erro ao carregar serviços.</p>";
     }
+}
 
-    .tabela-historico thead { display: none; }
+function toggleServico(cb, textoCompleto) {
+    const nomeApenas = textoCompleto.split(' R$')[0];
+    const id = nomeApenas.replace(/\s+/g, '-');
+    const label = document.getElementById(`label-${id}`);
     
-    .tabela-historico tr {
-        display: block;
-        background: #252525;
-        margin-bottom: 15px;
-        border-radius: 10px;
-        border: 1px solid #444;
+    if (cb.checked) {
+        servicosSelecionados.push(textoCompleto);
+        if (label) label.classList.add('selecionado');
+    } else {
+        servicosSelecionados = servicosSelecionados.filter(s => s !== textoCompleto);
+        if (label) label.classList.remove('selecionado');
+    }
+    buscarDisponibilidade();
+}
+
+function calcularTotalSelecionado() {
+    let total = 0;
+    servicosSelecionados.forEach(servico => {
+        const partes = servico.split('R$');
+        if (partes.length > 1) {
+            let valorLimpo = partes[1].trim().replace(',', '.');
+            const valorNum = parseFloat(valorLimpo);
+            if (!isNaN(valorNum)) total += valorNum;
+        }
+    });
+    return total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// 4. Disponibilidade e Agendamento
+async function buscarDisponibilidade() {
+    const listaDiv = document.getElementById('listaHorarios');
+    const dataInput = document.getElementById('dataCliente').value;
+    
+    if (servicosSelecionados.length === 0) {
+        listaDiv.innerHTML = '<div class="aviso-selecao" style="grid-column: 1/-1; text-align:center;"><b>Selecione um serviço primeiro.</b></div>';
+        return;
     }
 
-    .tabela-historico td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 15px;
-        border-bottom: 1px solid #333;
-        text-align: right;
-    }
+    try {
+        const { data: horarios, error } = await _supabase
+            .from('agendamentos')
+            .select('*')
+            .eq('barbearia_id', BARBEARIA_ID)
+            .eq('data', dataInput)
+            .eq('status', 'disponivel');
 
-    .tabela-historico td::before {
-        content: attr(data-label);
-        font-weight: bold;
-        color: var(--primary);
-        text-align: left;
+        if (error) throw error;
+
+        // Ordenar por hora manualmente para garantir
+        horarios.sort((a, b) => a.horario.localeCompare(b.horario));
+
+        if (horarios.length === 0) {
+            listaDiv.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Nenhum horário disponível.</p>';
+        } else {
+            listaDiv.innerHTML = horarios.map(h => `
+                <button class="btn-hora" onclick="abrirConfirmacao('${h.horario.substring(0,5)}', '${h.id}')">
+                    ${h.horario.substring(0,5)}
+                </button>
+            `).join('');
+        }
+    } catch (e) {
+        console.error("Erro Supabase:", e);
+        listaDiv.innerHTML = "<p>Erro ao carregar.</p>";
     }
 }
 
-/* UTILITÁRIOS */
-.hidden { display: none !important; }
+function abrirConfirmacao(horario, id) {
+    idAgendamentoSelecionado = id;
+    horarioSelecionado = horario;
+    const modal = document.getElementById('modalConfirmacao');
+    const resumo = document.getElementById('resumo');
+    resumo.innerHTML = `
+        <div style="text-align:left; background:rgba(255,255,255,0.05); padding:15px; border-radius:10px;">
+            <p>✂️ <b>Serviços:</b> ${servicosSelecionados.map(s => s.split(' R$')[0]).join(', ')}</p>
+            <p>⏰ <b>Horário:</b> ${horario.substring(0,5)}</p>
+            <p style="color:var(--primary); font-size:1.1rem; margin-top:10px;"><b>💰 Total: ${calcularTotalSelecionado()}</b></p>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+}
+
+async function confirmarAgendamento() {
+    const btn = document.getElementById('btnFinalizar');
+    const nome = document.getElementById('nomeCliente').value.trim();
+    const whatsapp = document.getElementById('telCliente').value.replace(/\D/g, '');
+    const nascimento = document.getElementById('nascCliente').value;
+
+    if (!nome || whatsapp.length < 10 || !nascimento) {
+        return alert("Por favor, preencha nome, whatsapp e data de nascimento.");
+    }
+
+    btn.innerText = "⏳ Verificando disponibilidade...";
+    btn.disabled = true;
+
+    try {
+        const valorNumerico = parseFloat(calcularTotalSelecionado().replace(/[^\d,]/g, '').replace(',', '.'));
+        
+        // --- A TRAVA DE SEGURANÇA ACONTECE AQUI ---
+        // Adicionamos o .select() para confirmar se houve alteração real
+        const { data, error } = await _supabase
+            .from('agendamentos')
+            .update({
+                cliente_nome: nome,
+                cliente_whatsapp: whatsapp,
+                nascimento: nascimento,
+                servico: servicosSelecionados.map(s => s.split(' R$')[0]).join(' + '),
+                status: 'ocupado',
+                preco_final: valorNumerico
+            })
+            .eq('id', idAgendamentoSelecionado)
+            .eq('status', 'disponivel') // SÓ ATUALIZA SE AINDA ESTIVER DISPONÍVEL
+            .select(); // Retorna o registro atualizado para conferência
+
+        if (error) throw error;
+
+        // Se o 'data' estiver vazio, significa que o .eq('status', 'disponivel') não encontrou a linha
+        // Ou seja: alguém agendou primeiro.
+        if (!data || data.length === 0) {
+            alert("⚠️ Ops! Este horário acabou de ser preenchido por outra pessoa. Por favor, escolha um novo horário.");
+            fecharModal();
+            buscarDisponibilidade(); // Atualiza a lista para mostrar a realidade
+            return;
+        }
+
+        // Se passou daqui, o agendamento foi garantido!
+        fecharModal();
+        mostrarSucesso("Agendado!", "Te esperamos em breve!");
+        buscarDisponibilidade();
+        
+    } catch (e) {
+        console.error("Erro no agendamento:", e);
+        alert("Erro ao salvar agendamento. Tente novamente.");
+    } finally {
+        btn.innerText = "Confirmar Agendamento";
+        btn.disabled = false;
+    }
+}
+
+// 5. Histórico e Cancelamento
+async function consultarHistoricoCliente() {
+    const whats = document.getElementById('whatsConsulta').value.replace(/\D/g, '');
+    const nasc = document.getElementById('nascConsulta').value;
+    const corpo = document.getElementById('corpoHistorico');
+    const resumo = document.getElementById('resumoCliente');
+
+    if (whats.length < 10 || !nasc) return alert("Preencha WhatsApp e Nascimento.");
+
+    resumo.innerHTML = "⏳ Buscando seus dados...";
+    try {
+        const { data: filtrados, error } = await _supabase
+            .from('agendamentos')
+            .select('*')
+            .eq('cliente_whatsapp', whats)
+            .eq('nascimento', nasc)
+            .eq('barbearia_id', BARBEARIA_ID)
+            .order('data', { ascending: false });
+
+        if (error) throw error;
+
+        document.getElementById('resultadoConsulta').classList.remove('hidden');
+        
+        if (filtrados.length === 0) {
+            resumo.innerHTML = "❌ Nenhum agendamento encontrado para esses dados.";
+            corpo.innerHTML = "";
+            return;
+        }
+
+        resumo.innerHTML = `✅ Olá, <b>${filtrados[0].cliente_nome}</b>! Confira seus horários:`;
+        
+        corpo.innerHTML = filtrados.map(h => {
+            const [ano, mes, dia] = h.data.split('-');
+            return `
+            <tr>
+                <td data-label="📅 Data">${dia}/${mes}/${ano}<br><b>${h.horario.substring(0,5)}</b></td>
+                <td data-label="✂️ Serviço">${h.servico}</td>
+                <td data-label="💰 Total" style="color:var(--primary); font-weight:bold;">R$ ${h.preco_final ? h.preco_final.toFixed(2).replace('.',',') : '---'}</td>
+                <td data-label="📌 Status"><span class="badge-status ${h.status === 'ocupado' ? 'status-azul' : 'status-verde'}">${h.status}</span></td>
+                <td data-label="⚙️ Ação">
+                    ${h.status === 'ocupado' ? `<button onclick="abrirModalCancelamento('${h.id}')" class="btn-cancelar-cliente">Cancelar</button>` : '-'}
+                </td>
+            </tr>`;
+        }).join('');
+    } catch (e) {
+        resumo.innerHTML = "❌ Erro ao conectar com o banco de dados.";
+    }
+}
+
+// Funções de Interface
+function fecharModal() { document.getElementById('modalConfirmacao').classList.add('hidden'); }
+function fecharModalCustom() {
+    document.getElementById('modalConfirmacaoCustom').classList.add('hidden');
+    const modalConsulta = document.querySelector('.modal-full-content');
+    if (modalConsulta) {
+        modalConsulta.style.opacity = "1";
+        modalConsulta.style.pointerEvents = "auto";
+    }
+}
+function fecharModalSucesso() { document.getElementById('modalSucesso').classList.add('hidden'); }
+function abrirModalConsulta() {
+    document.getElementById('modalConsulta').classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; 
+}
+function fecharModalConsulta() {
+    document.getElementById('modalConsulta').classList.add('hidden');
+    document.body.style.overflow = 'auto'; 
+}
+function mostrarSucesso(titulo, msg) {
+    document.getElementById('tituloSucesso').innerText = titulo;
+    document.getElementById('mensagemSucesso').innerText = msg;
+    document.getElementById('modalSucesso').classList.remove('hidden');
+}
+
+function abrirModalCancelamento(id) {
+    idParaCancelar = id;
+    document.getElementById('modalConfirmacaoCustom').classList.remove('hidden');
+    const modalConsulta = document.querySelector('.modal-full-content');
+    if (modalConsulta) {
+        modalConsulta.style.opacity = "0.5";
+        modalConsulta.style.pointerEvents = "none";
+    }
+}
+
+async function confirmarCancelamento() {
+    const btn = document.getElementById('btnConfirmarCancela');
+    btn.innerText = "⏳ Cancelando...";
+    btn.disabled = true;
+
+    try {
+        const { error } = await _supabase
+            .from('agendamentos')
+            .update({
+                cliente_nome: null,
+                cliente_whatsapp: null,
+                nascimento: null,
+                servico: null,
+                status: 'disponivel',
+                preco_final: null
+            })
+            .eq('id', idParaCancelar);
+
+        if (error) throw error;
+
+        fecharModalCustom();
+        mostrarSucesso("Cancelado!", "O horário está livre novamente.");
+        consultarHistoricoCliente();
+        buscarDisponibilidade();
+    } catch (e) {
+        alert("Erro ao cancelar.");
+    } finally {
+        btn.innerText = "Sim, Cancelar";
+        btn.disabled = false;
+    }
+}

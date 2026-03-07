@@ -157,13 +157,15 @@ async function confirmarAgendamento() {
         return alert("Por favor, preencha nome, whatsapp e data de nascimento.");
     }
 
-    btn.innerText = "⏳ Confirmando...";
+    btn.innerText = "⏳ Verificando disponibilidade...";
     btn.disabled = true;
 
     try {
         const valorNumerico = parseFloat(calcularTotalSelecionado().replace(/[^\d,]/g, '').replace(',', '.'));
         
-        const { error } = await _supabase
+        // --- A TRAVA DE SEGURANÇA ACONTECE AQUI ---
+        // Adicionamos o .select() para confirmar se houve alteração real
+        const { data, error } = await _supabase
             .from('agendamentos')
             .update({
                 cliente_nome: nome,
@@ -173,14 +175,28 @@ async function confirmarAgendamento() {
                 status: 'ocupado',
                 preco_final: valorNumerico
             })
-            .eq('id', idAgendamentoSelecionado);
+            .eq('id', idAgendamentoSelecionado)
+            .eq('status', 'disponivel') // SÓ ATUALIZA SE AINDA ESTIVER DISPONÍVEL
+            .select(); // Retorna o registro atualizado para conferência
 
         if (error) throw error;
 
+        // Se o 'data' estiver vazio, significa que o .eq('status', 'disponivel') não encontrou a linha
+        // Ou seja: alguém agendou primeiro.
+        if (!data || data.length === 0) {
+            alert("⚠️ Ops! Este horário acabou de ser preenchido por outra pessoa. Por favor, escolha um novo horário.");
+            fecharModal();
+            buscarDisponibilidade(); // Atualiza a lista para mostrar a realidade
+            return;
+        }
+
+        // Se passou daqui, o agendamento foi garantido!
         fecharModal();
         mostrarSucesso("Agendado!", "Te esperamos em breve!");
         buscarDisponibilidade();
+        
     } catch (e) {
+        console.error("Erro no agendamento:", e);
         alert("Erro ao salvar agendamento. Tente novamente.");
     } finally {
         btn.innerText = "Confirmar Agendamento";

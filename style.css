@@ -424,6 +424,83 @@ input:focus { border-color: var(--primary); }
     to { transform: scale(1); opacity: 1; }
 }
 
+.card-barbeiro-selecao:hover {
+    background-color: #f0f7ff;
+    transform: translateY(-3px);
+}
+.btn-horario {
+    padding: 10px;
+    background: white;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    color: #007bff;
+    cursor: pointer;
+}
+.btn-horario:hover {
+    background: #007bff;
+    color: white;
+}
+
+.lista-horarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-horario {
+    padding: 10px;
+    background: white;
+    border: 2px solid #007bff;
+    color: #007bff;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-horario:hover {
+    background: #007bff;
+    color: white;
+}
+
+.container-barbeiros-flex {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.card-barbeiro-cliente {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: 85px; /* Tamanho ideal para mobile */
+}
+
+.avatar-cliente {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%; /* Faz ficar redondo */
+    object-fit: cover;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+/* Borda dourada quando selecionado */
+.card-barbeiro-cliente.selecionado .avatar-cliente {
+    border-color: #d4af37; 
+    transform: scale(1.1);
+}
+
+.nome-barbeiro-label {
+    font-size: 12px;
+    margin-top: 5px;
+    font-weight: bold;
+    color: #fff;
+}
 
 /* =========================================
    RESPONSIVIDADE MOBILE

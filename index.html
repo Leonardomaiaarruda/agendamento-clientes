@@ -2,12 +2,15 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Agendamento | Barbearia Premium</title>
     <link rel="stylesheet" href="style.css">
     <style>
         /* Garantia extra de que a classe hidden vai funcionar */
         .hidden { display: none !important; }
+        
+        /* Proteção visual para interações rápidas */
+        button { user-select: none; -webkit-user-select: none; }
         
         /* Estilo para destacar o preço na seleção */
         .preco-tag {
@@ -15,93 +18,120 @@
             font-weight: bold;
             margin-left: 10px;
         }
+
+        /* Feedback visual para inputs desativados durante processamento */
+        input:disabled, button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Container flexível para os barbeiros em formato circular */
+        .container-barbeiros-flex {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
-    <button class="btn-abrir-consulta" onclick="abrirModalConsulta()" aria-label="Ver meus agendamentos">
+    <button class="btn-abrir-consulta" onclick="abrirModalConsulta()" aria-label="Consultar ou cancelar meus agendamentos">
         🔍 Meus Agendamentos
     </button>
 
     <div class="container">
         <header>
             <h1>✂️ Barbearia Premium</h1>
-            <p>Escolha o melhor horário para você</p>
+            <p>Agendamento Seguro e Profissional</p>
         </header>
 
-        <section class="section-card">
-            <div class="section-title">
+        <section class="section-card" aria-labelledby="titulo-servicos">
+            <div class="section-title" id="titulo-servicos">
                 <div class="icon-premium">✂️</div> 
                 <span>1. Selecione os Serviços</span>
             </div>
             <div id="containerServicos" class="grid-servicos">
-                <p class="instrucao">Carregando serviços...</p>
+                <p class="instrucao">Sincronizando serviços com o banco de dados...</p>
             </div>
         </section>
 
-        <section class="section-card"> 
-            <div class="section-title">
+        <section class="section-card" aria-labelledby="titulo-data">
+            <div class="section-title" id="titulo-data">
                 <div class="icon-premium">📅</div> 
                 <span>2. Escolha a Data</span>
             </div>
             <div class="form-group">
-                <input type="date" id="dataCliente" onchange="buscarDisponibilidade()">
+                <input type="date" id="dataCliente" onchange="mostrarBarbeirosDisponiveis()" class="input-estilizado">
             </div>
         </section>
 
-        <section class="section-card">
-            <div class="section-title">
+        <section id="secaoBarbeiros" class="section-card hidden" aria-labelledby="titulo-barbeiros">
+            <div class="section-title" id="titulo-barbeiros">
+                <div class="icon-premium">💈</div> 
+                <span>3. Escolha o Barbeiro</span>
+            </div>
+            <div id="containerBarbeiros" class="container-barbeiros-flex">
+            </div>
+        </section>
+
+        <section id="secaoHorarios" class="section-card hidden" aria-labelledby="titulo-horarios">
+            <div class="section-title" id="titulo-horarios">
                 <div class="icon-premium">⏰</div> 
-                <span>3. Horários Disponíveis</span>
+                <span>4. Horários Disponíveis</span>
             </div>
             <div id="listaHorarios" class="lista-horarios">
-                <p class="instrucao">Selecione uma data para ver as vagas.</p>
+                <p class="instrucao">Selecione um profissional para ver os horários.</p>
             </div>
         </section>
 
-        <div id="modalConfirmacao" class="modal hidden">
+        <div id="modalConfirmacao" class="modal hidden" role="dialog" aria-modal="true">
             <div class="modal-content">
                 <h3>Finalizar Agendamento</h3>
+                
                 <div id="resumo" class="resumo-agendamento"></div>
                 
                 <div class="form-group">
-                    <label for="nomeCliente">Seu Nome</label>
-                    <input type="text" id="nomeCliente" placeholder="Nome Completo">
+                    <label for="nomeCliente">Seu Nome Completo</label>
+                    <input type="text" id="nomeCliente" placeholder="Ex: João Silva" maxlength="60" autocomplete="name">
                 </div>
                 
                 <div class="form-group">
                     <label for="telCliente">WhatsApp</label>
-                    <input type="tel" id="telCliente" placeholder="(00) 00000-0000" inputmode="numeric">
+                    <input type="tel" id="telCliente" placeholder="(00) 00000-0000" inputmode="numeric" maxlength="15">
                 </div>
 
                 <div class="form-group">
-                    <label for="nascCliente">Data de Nascimento (Segurança)</label>
+                    <label for="nascCliente">Data de Nascimento</label>
                     <input type="date" id="nascCliente">
                     <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 4px;">
-                        *Use esta data para consultar ou cancelar seus horários depois.
+                        *Necessário para validar sua identidade em cancelamentos futuros.
                     </small>
                 </div>
 
-                <button onclick="confirmarAgendamento()" id="btnFinalizar" class="btn-confirmar">
-                    Confirmar Agendamento
-                </button>
-                <button onclick="fecharModal()" class="btn-cancelar">Voltar</button>
+                <div class="modal-footer">
+                    <button onclick="confirmarAgendamento()" id="btnFinalizar" class="btn-confirmar">
+                        Confirmar Agendamento
+                    </button>
+                    <button onclick="fecharModal()" class="btn-cancelar">Voltar</button>
+                </div>
             </div>
         </div>
 
-        <div id="modalConsulta" class="modal-full hidden">
+        <div id="modalConsulta" class="modal-full hidden" role="dialog" aria-modal="true">
             <div class="modal-full-content">
-                <span class="btn-fechar-modal" onclick="fecharModalConsulta()">x</span>
+                <span class="btn-fechar-modal" onclick="fecharModalConsulta()" aria-label="Fechar modal">×</span>
                 
                 <h3>🔍 Meus Agendamentos</h3>
                 <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
-                    Informe seus dados para consultar ou cancelar horários.
+                    Confirme sua identidade para acessar seus horários.
                 </p>
                 
                 <div class="input-grupo-seguro">
                     <div class="form-group">
-                        <label for="whatsConsulta">Seu WhatsApp</label>
-                        <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric">
+                        <label for="whatsConsulta">WhatsApp Cadastrado</label>
+                        <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric" maxlength="15">
                     </div>
                     
                     <div class="form-group">
@@ -120,9 +150,10 @@
                                 <tr>
                                     <th>📅 Data/Hora</th>
                                     <th>✂️ Serviço</th>
+                                    <th>💈 Barbeiro</th>
                                     <th>💰 Total</th>
                                     <th>📌 Status</th>
-                                    <th>⚙️ Ações</th>
+                                    <th>⚙️ Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="corpoHistorico"></tbody>
@@ -133,25 +164,25 @@
         </div>
     </div>
 
-    <div id="modalConfirmacaoCustom" class="modal-custom hidden">
+    <div id="modalConfirmacaoCustom" class="modal-custom hidden" role="alertdialog" aria-modal="true">
         <div class="modal-custom-content">
             <div class="modal-custom-icon">⚠️</div>
-            <h3>Confirmar Cancelamento</h3>
-            <p>Você realmente deseja desmarcar este horário? Esta ação não pode ser desfeita.</p>
+            <h3>Deseja cancelar?</h3>
+            <p>Esta vaga será liberada instantaneamente para outros clientes.</p>
             <div class="modal-custom-buttons">
                 <button id="btnConfirmarCancela" onclick="confirmarCancelamento()" class="btn-confirmar-msg">Sim, Cancelar</button>
-                <button onclick="fecharModalCustom()" class="btn-voltar-msg">Voltar</button>
+                <button onclick="fecharModalCustom()" class="btn-voltar-msg">Manter Horário</button>
             </div>
         </div>
     </div>
 
-    <div id="modalSucesso" class="modal-custom hidden">
+    <div id="modalSucesso" class="modal-custom hidden" role="status" aria-live="polite">
         <div class="modal-custom-content">
             <div class="modal-custom-icon" style="color: #27ae60;">✅</div>
             <h3 id="tituloSucesso">Concluído!</h3>
-            <p id="mensagemSucesso">A operação foi realizada com sucesso.</p>
+            <p id="mensagemSucesso"></p>
             <div class="modal-custom-buttons">
-                <button onclick="fecharModalSucesso()" class="btn-voltar-msg" style="background: #27ae60; color: white;">Ok</button>
+                <button onclick="fecharModalSucesso()" class="btn-voltar-msg" style="background: #27ae60; color: white; width: 100%;">Ok</button>
             </div>
         </div>
     </div>

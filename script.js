@@ -357,85 +357,90 @@
         }
     }
 
-    async function consultarHistoricoCliente() {
-        const whats = document.getElementById('whatsConsulta').value.replace(/\D/g, '');
-        const nasc = document.getElementById('nascConsulta').value;
-        const corpo = document.getElementById('corpoHistorico');
-        const resumo = document.getElementById('resumoCliente');
+async function consultarHistoricoCliente() {
+    const whats = document.getElementById('whatsConsulta').value.replace(/\D/g, '');
+    const nasc = document.getElementById('nascConsulta').value;
+    const corpo = document.getElementById('corpoHistorico');
+    const resumo = document.getElementById('resumoCliente');
 
-        if (whats.length < 10 || !nasc) return alert("Preencha seus dados.");
+    if (whats.length < 10 || !nasc) return alert("Preencha seus dados.");
 
-        resumo.innerHTML = "🔍 Buscando seu histórico...";
-        try {
-            const { data: filtrados, error } = await _supabase
-                .from('agendamentos')
-                .select('*')
-                .eq('cliente_whatsapp', whats) 
-                .eq('nascimento', nasc)
-                .eq('barbearia_id', BARBEARIA_ID)
-                .order('data', { ascending: false });
+    resumo.innerHTML = "🔍 Buscando seu histórico...";
+    try {
+        const { data: filtrados, error } = await _supabase
+            .from('agendamentos')
+            .select('*, barbeiros(nome)') // Busca o nome na tabela de barbeiros
+            .eq('cliente_whatsapp', whats) 
+            .eq('nascimento', nasc)
+            .eq('barbearia_id', BARBEARIA_ID)
+            .order('data', { ascending: false });
 
-            if (error) throw error;
+        if (error) throw error;
 
-            document.getElementById('resultadoConsulta').classList.remove('hidden');
-            
-            if (filtrados.length === 0) {
-                resumo.innerHTML = "Nenhum histórico encontrado.";
-                corpo.innerHTML = "";
-                return;
+        document.getElementById('resultadoConsulta').classList.remove('hidden');
+        
+        if (filtrados.length === 0) {
+            resumo.innerHTML = "Nenhum histórico encontrado.";
+            corpo.innerHTML = "";
+            return;
+        }
+
+        resumo.innerHTML = `Olá, <b>${filtrados[0].cliente_nome}</b>!`;
+        
+      corpo.innerHTML = filtrados.map(h => {
+            const [ano, mes, dia] = h.data.split('-');
+            const nomeBarbeiro = h.barbeiros ? h.barbeiros.nome : "Profissional";
+
+            let htmlFotos = '';
+            if (Array.isArray(h.foto_corte) && h.foto_corte.length > 0) {
+                const fotosValidas = h.foto_corte.filter(url => url && url !== "null");
+                htmlFotos = `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">
+                    ${fotosValidas.map(url => `<img src="${url}" onclick="window.open('${url}','_blank')" style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover; border: 1px solid #eee;">`).join('')}
+                </div>`;
             }
 
-            resumo.innerHTML = `Olá, <b>${filtrados[0].cliente_nome}</b>!`;
-            
-            corpo.innerHTML = filtrados.map(h => {
-                const [ano, mes, dia] = h.data.split('-');
-                
-                // --- LÓGICA DE FOTOS PARA O CLIENTE ---
-                let htmlFotos = '';
-                const fotos = h.foto_corte; // Array de URLs
-
-                if (Array.isArray(fotos) && fotos.length > 0) {
-                    const fotosValidas = fotos.filter(url => url && url !== "null");
-                    if (fotosValidas.length > 0) {
-                        htmlFotos = `
-                            <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px;">
-                                ${fotosValidas.map(url => `
-                                    <img src="${url}" onclick="window.open('${url}', '_blank')" 
-                                        style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; cursor: pointer;"
-                                        title="Clique para ver em tamanho real">
-                                `).join('')}
-                            </div>`;
-                    }
-                }
-
-                return `
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px 5px;">
+            return `
+                <tr>
+                    <td data-label="📅 Data/Hora">
+                        <div style="text-align: right;">
                             <div style="font-weight: bold;">${dia}/${mes}</div>
-                            <div style="font-size: 11px; color: #666;">${h.horario.substring(0,5)}</div>
-                        </td>
-                        <td style="padding: 10px 5px;">
+                            <div style="font-size: 11px; color: #777;">${h.horario.substring(0,5)}</div>
+                        </div>
+                    </td>
+
+                    <td data-label="✂️ Serviço">
+                        <div style="text-align: right;">
                             <div style="font-weight: 600;">${h.servico}</div>
                             ${htmlFotos}
-                        </td>
-                        <td style="padding: 10px 5px;">R$ ${h.preco_final ? h.preco_final.toFixed(2).replace('.',',') : '0,00'}</td>
-                        <td style="padding: 10px 5px;">
-                            <span class="badge-status ${h.status === 'ocupado' ? 'status-azul' : 'status-verde'}">
-                                ${h.status}
-                            </span>
-                        </td>
-                        <td style="padding: 10px 5px; text-align: right;">
-                            ${h.status === 'ocupado' ? 
-                                `<button onclick="abrirModalCancelamento('${h.id}')" class="btn-cancelar-cliente" style="padding: 5px 8px; font-size: 11px;">Cancelar</button>` 
-                                : '---'}
-                        </td>
-                    </tr>`;
-            }).join('');
-        } catch (e) {
-            console.error(e);
-            resumo.innerHTML = "Erro ao buscar dados.";
-        }
+                        </div>
+                    </td>
+
+                    <td data-label="💈 Barbeiro">
+                        <div style="color: #d4a373; font-weight: 500;">${nomeBarbeiro}</div>
+                    </td>
+
+                    <td data-label="💰 Total">
+                        <div style="font-weight: bold;">R$ ${h.preco_final ? h.preco_final.toFixed(2).replace('.',',') : '0,00'}</div>
+                    </td>
+
+                    <td data-label="📌 Status">
+                        <span class="badge-status ${h.status === 'ocupado' ? 'status-azul' : 'status-verde'}">
+                            ${h.status}
+                        </span>
+                    </td>
+
+                    <td data-label="⚙️ Ação">
+                        ${h.status === 'ocupado' ? 
+                            `<button onclick="abrirModalCancelamento('${h.id}')" class="btn-cancelar-cliente" style="width: 100%; padding: 10px; margin-top: 5px;">Cancelar Agendamento</button>` 
+                            : '<span style="color:#ccc;">Sem ações</span>'}
+                    </td>
+                </tr>`;
+        }).join('');
+    } catch (e) {
+        console.error(e);
+        resumo.innerHTML = "Erro ao buscar dados.";
     }
+}
 
     async function confirmarCancelamento() {
         if (estaProcessando) return;

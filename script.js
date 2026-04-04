@@ -157,9 +157,7 @@
     // LÓGICA DE BARBEIROS E HORÁRIOS
     // =========================================
     async function mostrarBarbeirosDisponiveis() {
-        // 1. Referências dos elementos
         const secaoBarbeiros = document.getElementById('secaoBarbeiros');
-        // Buscamos o container flex dentro da seção para manter seu layout circular
         const container = document.querySelector('#secaoBarbeiros .container-barbeiros-flex');
         
         if (!secaoBarbeiros || !container) {
@@ -167,16 +165,15 @@
             return;
         }
 
-        // 2. Torna a seção visível removendo a classe 'hidden'
         secaoBarbeiros.classList.remove('hidden');
         container.innerHTML = "<p style='color: var(--text-muted);'>Buscando profissionais...</p>";
 
         try {
-            // 3. Busca no banco de dados
             const { data: barbeiros, error } = await _supabase
                 .from('barbeiros')
-                .select('id, nome, foto_url')
-                .eq('barbearia_id', BARBEARIA_ID);
+                .select('id, nome, foto_url, ativo')
+                .eq('barbearia_id', BARBEARIA_ID)
+                .eq('ativo', true);
 
             if (error) throw error;
 
@@ -185,10 +182,9 @@
                 return;
             }
 
-            container.innerHTML = ""; // Limpa o carregando
+            container.innerHTML = "";
 
             barbeiros.forEach(b => {
-                // Lógica de fallback para a foto
                 const fotoFinal = (b.foto_url && b.foto_url.trim() !== "") 
                     ? b.foto_url 
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(b.nome)}&background=random&color=fff`;
@@ -196,7 +192,6 @@
                 const card = document.createElement('div');
                 card.className = "card-barbeiro-cliente";
                 
-                // Note que usamos as classes do seu style.css: .avatar-cliente e .nome-barbeiro-label
                 card.innerHTML = `
                     <img src="${fotoFinal}" 
                         class="avatar-cliente" 
@@ -231,45 +226,65 @@
         }
     }
 
-    async function buscarHorarios(barbeiroId, nomeBarbeiro) {
-        const listaDiv = document.getElementById('listaHorarios');
-        const secaoHorarios = document.getElementById('secaoHorarios');
-        const dataInput = document.getElementById('dataCliente').value;
-        
-        if (servicosSelecionados.length === 0) {
-            alert("Por favor, selecione ao menos um serviço primeiro.");
-            return;
-        }
-
-        secaoHorarios.classList.remove('hidden');
-        listaDiv.innerHTML = "<p>Buscando vagas...</p>";
-
-        try {
-            const { data: horarios, error } = await _supabase
-                .from('agendamentos')
-                .select('id, horario')
-                .eq('barbearia_id', BARBEARIA_ID)
-                .eq('barbeiro_id', barbeiroId)
-                .eq('data', dataInput)
-                .eq('status', 'disponivel');
-
-            if (error) throw error;
-            horarios.sort((a, b) => a.horario.localeCompare(b.horario));
-
-            if (horarios.length === 0) {
-                listaDiv.innerHTML = `<p style="grid-column: 1/-1; text-align:center;">O barbeiro ${nomeBarbeiro} não tem vagas para esta data.</p>`;
-            } else {
-                listaDiv.innerHTML = horarios.map(h => `
-                    <button class="btn-hora" onclick="abrirConfirmacao('${h.horario.substring(0,5)}', '${h.id}')">
-                        ${h.horario.substring(0,5)}
-                    </button>
-                `).join('');
-            }
-        } catch (e) {
-            listaDiv.innerHTML = "<p>Erro ao carregar horários.</p>";
-        }
+   async function buscarHorarios(barbeiroId, nomeBarbeiro) {
+    const listaDiv = document.getElementById('listaHorarios');
+    const secaoHorarios = document.getElementById('secaoHorarios');
+    const dataInput = document.getElementById('dataCliente').value;
+    
+    if (servicosSelecionados.length === 0) {
+        alert("Por favor, selecione ao menos um serviço primeiro.");
+        return;
     }
 
+    secaoHorarios.classList.remove('hidden');
+    listaDiv.innerHTML = "<p>Buscando vagas...</p>";
+
+    // --- LÓGICA DE FILTRO DE HORÁRIO ATUAL ---
+    const agora = new Date();
+    // Obtém a data de hoje no formato YYYY-MM-DD (usando fuso local)
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    const dataHoje = `${ano}-${mes}-${dia}`;
+    
+    // Obtém a hora atual no formato HH:MM:SS
+    const horaAtual = agora.toTimeString().split(' ')[0]; 
+
+    try {
+        let query = _supabase
+            .from('agendamentos')
+            .select('id, horario')
+            .eq('barbearia_id', BARBEARIA_ID)
+            .eq('barbeiro_id', barbeiroId)
+            .eq('data', dataInput)
+            .eq('status', 'disponivel');
+
+        // Se a data selecionada for HOJE, filtra para não mostrar horários que já passaram
+        if (dataInput === dataHoje) {
+            query = query.gt('horario', horaAtual);
+        }
+
+        const { data: horarios, error } = await query;
+
+        if (error) throw error;
+
+        // Ordenação manual dos horários
+        horarios.sort((a, b) => a.horario.localeCompare(b.horario));
+
+        if (horarios.length === 0) {
+            listaDiv.innerHTML = `<p style="grid-column: 1/-1; text-align:center;">Não há mais vagas disponíveis para ${nomeBarbeiro} nesta data.</p>`;
+        } else {
+            listaDiv.innerHTML = horarios.map(h => `
+                <button class="btn-hora" onclick="abrirConfirmacao('${h.horario.substring(0,5)}', '${h.id}')">
+                    ${h.horario.substring(0,5)}
+                </button>
+            `).join('');
+        }
+    } catch (e) {
+        console.error("Erro ao buscar horários:", e);
+        listaDiv.innerHTML = "<p>Erro ao carregar horários.</p>";
+    }
+}
     function abrirConfirmacao(horario, id) {
         idAgendamentoSelecionado = id;
         horarioSelecionado = horario;
@@ -350,12 +365,12 @@
 
         if (whats.length < 10 || !nasc) return alert("Preencha seus dados.");
 
-        resumo.innerHTML = "🔍 Buscando...";
+        resumo.innerHTML = "🔍 Buscando seu histórico...";
         try {
             const { data: filtrados, error } = await _supabase
                 .from('agendamentos')
                 .select('*')
-                .eq('cliente_whatsapp', whats)
+                .eq('cliente_whatsapp', whats) 
                 .eq('nascimento', nasc)
                 .eq('barbearia_id', BARBEARIA_ID)
                 .order('data', { ascending: false });
@@ -371,20 +386,53 @@
             }
 
             resumo.innerHTML = `Olá, <b>${filtrados[0].cliente_nome}</b>!`;
+            
             corpo.innerHTML = filtrados.map(h => {
                 const [ano, mes, dia] = h.data.split('-');
+                
+                // --- LÓGICA DE FOTOS PARA O CLIENTE ---
+                let htmlFotos = '';
+                const fotos = h.foto_corte; // Array de URLs
+
+                if (Array.isArray(fotos) && fotos.length > 0) {
+                    const fotosValidas = fotos.filter(url => url && url !== "null");
+                    if (fotosValidas.length > 0) {
+                        htmlFotos = `
+                            <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px;">
+                                ${fotosValidas.map(url => `
+                                    <img src="${url}" onclick="window.open('${url}', '_blank')" 
+                                        style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; cursor: pointer;"
+                                        title="Clique para ver em tamanho real">
+                                `).join('')}
+                            </div>`;
+                    }
+                }
+
                 return `
-                <tr>
-                    <td>${dia}/${mes} - ${h.horario.substring(0,5)}</td>
-                    <td>${h.servico}</td>
-                    <td>R$ ${h.preco_final?.toFixed(2).replace('.',',')}</td>
-                    <td><span class="badge-status ${h.status === 'ocupado' ? 'status-azul' : 'status-verde'}">${h.status}</span></td>
-                    <td>
-                        ${h.status === 'ocupado' ? `<button onclick="abrirModalCancelamento('${h.id}')" class="btn-cancelar-cliente">Cancelar</button>` : '---'}
-                    </td>
-                </tr>`;
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px 5px;">
+                            <div style="font-weight: bold;">${dia}/${mes}</div>
+                            <div style="font-size: 11px; color: #666;">${h.horario.substring(0,5)}</div>
+                        </td>
+                        <td style="padding: 10px 5px;">
+                            <div style="font-weight: 600;">${h.servico}</div>
+                            ${htmlFotos}
+                        </td>
+                        <td style="padding: 10px 5px;">R$ ${h.preco_final ? h.preco_final.toFixed(2).replace('.',',') : '0,00'}</td>
+                        <td style="padding: 10px 5px;">
+                            <span class="badge-status ${h.status === 'ocupado' ? 'status-azul' : 'status-verde'}">
+                                ${h.status}
+                            </span>
+                        </td>
+                        <td style="padding: 10px 5px; text-align: right;">
+                            ${h.status === 'ocupado' ? 
+                                `<button onclick="abrirModalCancelamento('${h.id}')" class="btn-cancelar-cliente" style="padding: 5px 8px; font-size: 11px;">Cancelar</button>` 
+                                : '---'}
+                        </td>
+                    </tr>`;
             }).join('');
         } catch (e) {
+            console.error(e);
             resumo.innerHTML = "Erro ao buscar dados.";
         }
     }

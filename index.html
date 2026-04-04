@@ -3,191 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Agendamento | Barbearia Premium</title>
+    <title>ADM - Painel de Controle</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Garantia extra de que a classe hidden vai funcionar */
-        .hidden { display: none !important; }
-        
-        /* Proteção visual para interações rápidas */
-        button { user-select: none; -webkit-user-select: none; }
-        
-        /* Estilo para destacar o preço na seleção */
-        .preco-tag {
-            color: #27ae60;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        /* Feedback visual para inputs desativados durante processamento */
-        input:disabled, button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Container flexível para os barbeiros em formato circular */
-        .container-barbeiros-flex {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="mobile-adm">
 
-    <button class="btn-abrir-consulta" onclick="abrirModalConsulta()" aria-label="Consultar ou cancelar meus agendamentos">
-        🔍 Meus Agendamentos
-    </button>
+    <div id="login-screen" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1c1e; z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+        <div class="card" style="width: 100%; max-width: 350px; text-align: center; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h1 style="margin-bottom: 10px; font-size: 1.5rem; color: #1a1c1e;">🔒 Painel ADM</h1>
+            <p style="color: #8898aa; font-size: 0.9rem; margin-bottom: 25px;">Identifique-se para gerenciar sua agenda.</p>
+            
+            <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem;">E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com" class="input-field" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            
+            <div class="form-group" style="text-align: left; margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem;">Senha</label>
+                <input type="password" id="login-senha" placeholder="••••••••" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
 
-    <div class="container">
-        <header>
-            <h1>✂️ Barbearia Premium</h1>
-            <p>Agendamento Seguro e Profissional</p>
+            <button id="btn-login" onclick="executarLogin()" class="btn-primario" style="width: 100%; padding: 15px; background: #d4a373; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Entrar no Painel</button>
+            <p id="login-erro" style="color: #f5365c; font-size: 0.8rem; margin-top: 15px; display: none;"></p>
+            
+            <p style="margin-top: 15px; font-size: 0.85rem;">
+                <a href="javascript:void(0)" onclick="solicitarRecuperacaoSenha()" style="color: #d4a373; text-decoration: none; font-weight: 600;">Esqueci minha senha</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <header class="app-header">
+            <div class="user-profile-header">
+               <div class="avatar-container" style="position: relative; width: 80px; height: 80px; margin: 0 auto;">
+                    <img id="imgPerfil" 
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" 
+                        style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #d4a373; background: #f0f0f0;">
+                    
+                    <label for="fotoInput" style="position: absolute; bottom: 0; right: 0; background: #d4a373; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; font-size: 14px;">📷</label>
+                    <input type="file" id="fotoInput" accept="image/*" style="display: none;" onchange="uploadFotoPerfil(event)">
+                </div>
+                <button onclick="abrirModalSenha()" class="btn-outline" style="padding: 5px 10px; font-size: 12px; margin-top: 8px;">🔑 Mudar Senha</button>
+                <div id="statusUpload" style="font-size: 10px; color: #666; margin-top: 5px; height: 12px; text-align: center;"></div>
+            </div>
+
+            <nav class="admin-nav">
+                <button onclick="mudarTela('gerar')" id="btn-nav-gerar-desk" class="nav-btn active">🛠️ Vagas</button>
+                <button onclick="mudarTela('agenda')" id="btn-nav-agenda-desk" class="nav-btn">📅 Agenda</button>
+                <button onclick="abrirModalConfig()" class="nav-btn">✂️ Serviços</button>
+                <button onclick="abrirModalBarbeiros()" id="btn-nav-equipe-desk" class="nav-btn" style="display: none;">👥 Equipe</button>
+                <button onclick="fazerLogout()" class="nav-btn" style="color: #f5365c; margin-left: 10px;">🚪 Sair</button>
+            </nav>
         </header>
 
-        <section class="section-card" aria-labelledby="titulo-servicos">
-            <div class="section-title" id="titulo-servicos">
-                <div class="icon-premium">✂️</div> 
-                <span>1. Selecione os Serviços</span>
-            </div>
-            <div id="containerServicos" class="grid-servicos">
-                <p class="instrucao">Sincronizando serviços com o banco de dados...</p>
-            </div>
-        </section>
-
-        <section class="section-card" aria-labelledby="titulo-data">
-            <div class="section-title" id="titulo-data">
-                <div class="icon-premium">📅</div> 
-                <span>2. Escolha a Data</span>
-            </div>
-            <div class="form-group">
-                <input type="date" id="dataCliente" onchange="mostrarBarbeirosDisponiveis()" class="input-estilizado">
-            </div>
-        </section>
-
-        <section id="secaoBarbeiros" class="section-card hidden" aria-labelledby="titulo-barbeiros">
-            <div class="section-title" id="titulo-barbeiros">
-                <div class="icon-premium">💈</div> 
-                <span>3. Escolha o Barbeiro</span>
-            </div>
-            <div id="containerBarbeiros" class="container-barbeiros-flex">
-            </div>
-        </section>
-
-        <section id="secaoHorarios" class="section-card hidden" aria-labelledby="titulo-horarios">
-            <div class="section-title" id="titulo-horarios">
-                <div class="icon-premium">⏰</div> 
-                <span>4. Horários Disponíveis</span>
-            </div>
-            <div id="listaHorarios" class="lista-horarios">
-                <p class="instrucao">Selecione um profissional para ver os horários.</p>
-            </div>
-        </section>
-
-        <div id="modalConfirmacao" class="modal hidden" role="dialog" aria-modal="true">
-            <div class="modal-content">
-                <h3>Finalizar Agendamento</h3>
-                
-                <div id="resumo" class="resumo-agendamento"></div>
-                
-                <div class="form-group">
-                    <label for="nomeCliente">Seu Nome Completo</label>
-                    <input type="text" id="nomeCliente" placeholder="Ex: João Silva" maxlength="60" autocomplete="name">
+        <nav class="nav-mobile">
+            <button onclick="mudarTela('gerar')" id="btn-nav-gerar" class="nav-mobile-item active">
+                <i>🛠️</i> <span>Vagas</span>
+            </button>
+            <button onclick="mudarTela('agenda')" id="btn-nav-agenda" class="nav-mobile-item">
+                <i>📅</i> <span>Agenda</span>
+            </button>
+            <button onclick="abrirModalConfig()" class="nav-mobile-item">
+                <i>✂️</i> <span>Serviços</span>
+            </button>
+            <button onclick="abrirModalBarbeiros()" id="btn-nav-equipe-mobile" class="nav-mobile-item" style="display: none;">
+                <i>👥</i> <span>Equipe</span>
+            </button>
+            <button onclick="fazerLogout()" class="nav-mobile-item" style="color: #f5365c;">
+                <i>🚪</i> <span>Sair</span>
+            </button>
+        </nav>
+      
+        <main id="tela-gerar" class="tela-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total de Vagas</span>
+                    <span id="stat-vagas" class="stat-value">--</span>
                 </div>
-                
-                <div class="form-group">
-                    <label for="telCliente">WhatsApp</label>
-                    <input type="tel" id="telCliente" placeholder="(00) 00000-0000" inputmode="numeric" maxlength="15">
-                </div>
-
-                <div class="form-group">
-                    <label for="nascCliente">Data de Nascimento</label>
-                    <input type="date" id="nascCliente">
-                    <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 4px;">
-                        *Necessário para validar sua identidade em cancelamentos futuros.
-                    </small>
-                </div>
-
-                <div class="modal-footer">
-                    <button onclick="confirmarAgendamento()" id="btnFinalizar" class="btn-confirmar">
-                        Confirmar Agendamento
-                    </button>
-                    <button onclick="fecharModal()" class="btn-cancelar">Voltar</button>
-                </div>
+                <button class="btn-add-float" id="btnAbrirForm" onclick="toggleFormulario()">➕ Gerar Horários</button>
             </div>
-        </div>
 
-        <div id="modalConsulta" class="modal-full hidden" role="dialog" aria-modal="true">
-            <div class="modal-full-content">
-                <span class="btn-fechar-modal" onclick="fecharModalConsulta()" aria-label="Fechar modal">×</span>
-                
-                <h3>🔍 Meus Agendamentos</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
-                    Confirme sua identidade para acessar seus horários.
-                </p>
-                
-                <div class="input-grupo-seguro">
+            <section id="form-container" class="card hidden anim-up" style="margin-bottom: 20px;">
+                <h2 id="titulo-form">Configurar Grade de Horários</h2>
+                <form id="scheduleForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data Início</label>
+                            <input type="date" id="dataInicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Data Fim</label>
+                            <input type="date" id="dataFim" required>
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label for="whatsConsulta">WhatsApp Cadastrado</label>
-                        <input type="tel" id="whatsConsulta" placeholder="(00) 00000-0000" inputmode="numeric" maxlength="15">
+                        <label>Dias da Semana</label>
+                        <div class="dias-check-group">
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="1" checked> Seg</label>
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="2" checked> Ter</label>
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="3" checked> Qua</label>
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="4" checked> Qui</label>
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="5" checked> Sex</label>
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="6" checked> Sáb</label>
+                            <label class="check-item"><input type="checkbox" name="dia_sem" value="0"> Dom</label>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="nascConsulta">Data de Nascimento</label>
-                        <input type="date" id="nascConsulta">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hora Início</label>
+                            <input type="time" id="horaInicio" value="08:00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Hora Fim</label>
+                            <input type="time" id="horaFim" value="19:00" required>
+                        </div>
                     </div>
-                    
-                    <button onclick="consultarHistoricoCliente()" class="btn-buscar">Verificar e Acessar</button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Intervalo (min)</label>
+                            <select id="intervalo">
+                                <option value="30">30 min</option>
+                                <option value="45">45 min</option>
+                                <option value="60" selected>60 min</option>
+                                <option value="90">90 min</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Serviço Fixo (opcional)</label>
+                            <select id="servico"></select>
+                        </div>
+                    </div>
+
+                    <div id="secaoAlmoco" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: #666;">Início Almoço</label>
+                            <input type="time" id="almocoInicio" class="input-field">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #666;">Fim Almoço</label>
+                            <input type="time" id="almocoFim" class="input-field">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnSalvar" class="btn-primario">Gerar Horários</button>
+                </form>
+            </section>
+
+            <div class="card table-container">
+                <div class="filtro-agenda-adm" style="padding: 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; background: #fafafa; border-radius: 12px 12px 0 0;">
+                    <label for="filtroDataAdm" style="font-size: 0.85rem; font-weight: 600; color: #555;">📅 Ver agenda do dia:</label>
+                    <input type="date" id="filtroDataAdm" onchange="listarHorarios()" style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: inherit;">
                 </div>
 
-                <div id="resultadoConsulta" class="hidden">
-                    <div id="resumoCliente" style="margin-top: 20px; font-weight: bold; color: var(--primary);"></div>
-                    <div class="tabela-responsiva">
-                        <table class="tabela-historico">
-                            <thead>
-                                <tr>
-                                    <th>📅 Data/Hora</th>
-                                    <th>✂️ Serviço</th>
-                                    <th>💈 Barbeiro</th>
-                                    <th>💰 Total</th>
-                                    <th>📌 Status</th>
-                                    <th>⚙️ Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoHistorico"></tbody>
-                        </table>
-                    </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #fdfdfd;">
+                            <th style="text-align: left; padding: 12px;">Horário</th>
+                            <th style="text-align: left; padding: 12px;">Status/Serviço</th>
+                            <th style="text-align: right; padding: 12px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                        </tbody>
+                </table>
+            </div>
+        </main>
+
+        <main id="tela-agenda" class="tela-content hidden">
+            <div class="card table-container">
+                <h2 style="padding: 20px;">📅 Meus Compromissos</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Cliente</th>
+                                <th>Serviço</th>
+                                <th>Contato</th>
+                                <th style="text-align: right;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoAgenda"></tbody>
+                    </table>
                 </div>
             </div>
+        </main>
+    </div>
+
+    <div id="modalConfig" class="modal hidden">
+        <div class="modal-content anim-up">
+            <div class="modal-header">
+                <h2>✂️ Meus Serviços</h2>
+                <button onclick="fecharModalConfig()" class="btn-close">×</button>
+            </div>
+            <div class="form-group" style="padding: 15px; background: #f8f9fa; border-radius: 12px; margin-bottom: 20px;">
+                <label>Novo Serviço</label>
+                <input type="text" id="novoServicoNome" placeholder="Ex: Corte Degradê">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="novoServicoPreco" placeholder="Preço: 35,00" style="flex: 1;">
+                    <button onclick="adicionarServicoLista()" class="btn-add-servico" style="width: 80px;">Add</button>
+                </div>
+            </div>
+            <ul id="listaServicosConfig" style="max-height: 300px; overflow-y: auto; list-style: none; padding: 0;"></ul>
         </div>
     </div>
 
-    <div id="modalConfirmacaoCustom" class="modal-custom hidden" role="alertdialog" aria-modal="true">
-        <div class="modal-custom-content">
-            <div class="modal-custom-icon">⚠️</div>
-            <h3>Deseja cancelar?</h3>
-            <p>Esta vaga será liberada instantaneamente para outros clientes.</p>
-            <div class="modal-custom-buttons">
-                <button id="btnConfirmarCancela" onclick="confirmarCancelamento()" class="btn-confirmar-msg">Sim, Cancelar</button>
-                <button onclick="fecharModalCustom()" class="btn-voltar-msg">Manter Horário</button>
+    <div id="modalBarbeiros" class="modal hidden">
+        <div class="modal-content anim-up">
+            <div class="modal-header">
+                <h2>👥 Gestão da Equipe</h2>
+                <button onclick="fecharModalBarbeiros()" class="btn-close">×</button>
             </div>
+            
+            <div id="formCadastroBarbeiro" class="form-group" style="padding: 15px; background: #f0f7ff; border-radius: 12px; margin-bottom: 20px;">
+                <label>Nome Completo</label>
+                <input type="text" id="novoBarbeiroNome" placeholder="Ex: João Silva">
+                
+                <label style="margin-top:10px; display:block;">E-mail de Login</label>
+                <input type="email" id="novoBarbeiroEmail" placeholder="barbeiro@email.com">
+                
+                <label style="margin-top:10px; display:block;">Senha Inicial</label>
+                <input type="password" id="novoBarbeiroSenha" placeholder="Mínimo 6 caracteres">
+
+                <button onclick="realizarCadastroCompleto()" id="btnCadastrarEquipe" class="btn-primario" style="margin-top: 15px; width: 100%;">Registrar e Criar Acesso</button>
+                <p id="statusCadastro" style="font-size: 11px; text-align: center; margin-top: 8px; display: none;"></p>
+            </div>
+
+            <h3 style="font-size: 1rem; margin-bottom: 10px;">Barbeiros Ativos</h3>
+            <ul id="listaBarbeirosConfig" style="max-height: 250px; overflow-y: auto; list-style: none; padding: 0;"></ul>
         </div>
     </div>
 
-    <div id="modalSucesso" class="modal-custom hidden" role="status" aria-live="polite">
-        <div class="modal-custom-content">
-            <div class="modal-custom-icon" style="color: #27ae60;">✅</div>
-            <h3 id="tituloSucesso">Concluído!</h3>
-            <p id="mensagemSucesso"></p>
-            <div class="modal-custom-buttons">
-                <button onclick="fecharModalSucesso()" class="btn-voltar-msg" style="background: #27ae60; color: white; width: 100%;">Ok</button>
-            </div>
+    <div id="modalSenha" class="modal-overlay hidden">
+        <div class="modal-content-centered">
+            <button onclick="fecharModalSenha()" class="btn-close-modal">&times;</button>
+            <h3 style="margin-bottom: 20px; text-align: center;">🔐 Alterar Senha</h3>
+            
+            <label style="font-size: 0.85rem; font-weight: 600;">Nova Senha</label>
+            <input type="password" id="novaSenhaInput" class="input-field" placeholder="Mínimo 6 caracteres" style="width: 100%; margin-bottom: 15px;">
+            
+            <label style="font-size: 0.85rem; font-weight: 600;">Confirmar Nova Senha</label>
+            <input type="password" id="confirmarSenhaInput" class="input-field" placeholder="Repita a senha" style="width: 100%; margin-bottom: 20px;">
+            
+            <button onclick="executarTrocaSenha()" id="btnConfirmarSenha" class="btn-primario" style="width: 100%;">Atualizar Senha</button>
+            <p id="statusSenha" style="font-size: 12px; text-align: center; margin-top: 15px; display: none;"></p>
         </div>
     </div>
+
+    <div id="status" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; background: #333; color: white; padding: 12px 24px; border-radius: 30px; display: none; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
-</html> 
+</html>

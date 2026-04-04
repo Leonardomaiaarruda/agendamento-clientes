@@ -502,6 +502,59 @@ input:focus { border-color: var(--primary); }
     color: #fff;
 }
 
+
+@media (max-width: 600px) {
+    /* Esconde o cabeçalho da tabela original no mobile */
+    .tabela-historico thead {
+        display: none;
+    }
+
+    .tabela-historico, 
+    .tabela-historico tbody, 
+    .tabela-historico tr, 
+    .tabela-historico td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabela-historico tr {
+        margin-bottom: 15px;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .tabela-historico td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 5px;
+        border-bottom: 1px solid #f9f9f9;
+        white-space: normal; /* Permite quebra de linha se o texto for longo */
+    }
+
+    .tabela-historico td:last-child {
+        border-bottom: none;
+        justify-content: center; /* Centraliza o botão de cancelar */
+        margin-top: 5px;
+    }
+
+    /* Adiciona etiquetas automáticas antes dos dados no mobile */
+    .tabela-historico td::before {
+        content: attr(data-label); /* Puxa o nome da coluna */
+        font-weight: bold;
+        color: #888;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+    
+    .tabela-responsiva {
+        overflow-x: hidden; /* Remove o scroll lateral estranho */
+    }
+}
+
 /* =========================================
    RESPONSIVIDADE MOBILE
    ========================================= */
